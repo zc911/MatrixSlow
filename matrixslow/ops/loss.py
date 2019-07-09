@@ -1,5 +1,12 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Wed July  9 15:13:01 2019
+
+@author: chenzhen
+"""
+
 import numpy as np
+
 from core.node import Node
 
 

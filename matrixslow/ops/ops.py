@@ -67,24 +67,6 @@ class MatMul(Node):
             return jacobi[row_sort, :][:, col_sort]
 
 
-class Dot(Node):
-    """
-    向量内积
-    """
-
-    def compute(self):
-        assert len(self.parents) == 2 and self.parents[0].dimension(
-        ) == self.parents[1].dimension()
-        self.value = self.parents[0].value.T * \
-            self.parents[1].value  # 1x1矩阵（标量），为两个父节点的内积
-
-    def get_jacobi(self, parent):
-        if parent is self.parents[0]:
-            return self.parents[1].value.T
-        else:
-            return self.parents[0].value.T
-
-
 class Logistic(Node):
     """
     对向量的分量施加Logistic函数

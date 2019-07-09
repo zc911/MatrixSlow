@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Wed July  9 15:13:01 2019
 
-import sys
-from core.node import Variable
-from ops.ops import Add, MatMul, Logistic
-from ops.loss import LogLoss
-from optimizer.optimizer import GradientDescent
-from core.graph import default_graph
-import numpy as np
-import matplotlib
+@author: chenzhen
+"""
 import random
+import sys
+
+import matplotlib
+import numpy as np
 from sklearn.metrics import accuracy_score
+
+from core.graph import default_graph
+from core.node import Variable
+from ops.loss import LogLoss
+from ops.ops import Add, Logistic, MatMul
+from optimizer.optimizer import GradientDescent
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -57,7 +63,10 @@ def random_gen_dateset(feature_num, sample_num, test_radio=0.3, seed=41):
     data_y = np.where(data_y > 0, 1, 0)
     train_size = int(sample_num * (1 - test_radio))
 
-    return (data_x[:train_size, :], data_y[:train_size, :], data_x[train_size:, :], data_y[train_size:, :])
+    return (data_x[:train_size, :],
+            data_y[:train_size, :],
+            data_x[train_size:, :],
+            data_y[train_size:, :])
 
 
 def build_model(feature_num):
