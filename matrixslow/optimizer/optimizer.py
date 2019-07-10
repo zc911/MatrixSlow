@@ -81,6 +81,7 @@ class GradientDescent(Optimizer):
 
     def __init__(self, graph, target, learning_rate=0.01, batch_size=12):
         Optimizer.__init__(self, graph, target, batch_size)
+        self.learning_rate = learning_rate
 
     def update(self):
         """
@@ -91,6 +92,58 @@ class GradientDescent(Optimizer):
                 gradient = self.get_gradient(node)
 
                 node.set_value(node.value - self.learning_rate * gradient)
+
+
+class Momentum(Optimizer):
+    '''
+    Momentum动量梯度下降
+    '''
+
+    def __init__(self, graph, target, learning_rate=0.01, momentun=0.9, batch_size=32):
+        Optimizer.__init__(self, graph, target, batch_size)
+        self.learning_rate = learning_rate
+        # 动量参数，默认为0.9
+        self.momentum = momentun
+
+        self.v = dict()
+
+    def update(self):
+        for node in self.graph.nodes:
+            if isinstance(node, Variable) and node.trainable:
+                gradient = self.get_gradient(node)
+
+                if node not in self.v:
+                    self.v[node] = gradient
+                else:
+                    self.v[node] = self.momentum * \
+                        self.v[node] + self.learning_rate * gradient
+                node.set_value(node.value - self.v[node])
+
+
+class AdaGrad(Optimizer):
+    '''
+    AdaGrad优化器
+    '''
+
+    def __init__(self, graph, target, learning_rate=0.01, beta=0.9, batch_size=32):
+        Optimizer.__init__(self, graph, target, batch_size)
+        self.learning_rate = learning_rate
+        self.beta = 0.9
+
+        self.s = dict()
+
+    def update(self):
+        for node in self.graph.nodes:
+            if isinstance(node, Variable) and node.trainable:
+                gradient = self.get_gradient(node)
+
+                if node not in self.s:
+                    self.s[node] = np.power(gradient, 2)
+                else:
+                    self.s[node] = self.s[node] + np.power(gradient, 2)
+
+                node.set_value(node.value - self.learning_rate *
+                               gradient / (np.sqrt(self.s[node] + 1e-10)))
 
 
 class RMSProp(Optimizer):
@@ -108,7 +161,6 @@ class RMSProp(Optimizer):
         self.s = dict()
 
     def update(self):
-
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 gradient = self.get_gradient(node)

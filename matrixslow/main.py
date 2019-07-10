@@ -15,7 +15,7 @@ from core.graph import default_graph
 from core.node import Variable
 from ops.loss import LogLoss
 from ops.ops import Add, Logistic, MatMul
-from optimizer.optimizer import GradientDescent, RMSProp, Adam
+from optimizer.optimizer import GradientDescent, AdaGrad, RMSProp, Adam, Momentum
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -114,10 +114,20 @@ def train(train_x, train_y, test_x, test_y, epoches):
     y_hat = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
     loss = LogLoss(y_hat, y)
-    # 使用梯度下降优化算法
-    # optimizer = GradientDescent(default_graph, loss, 0.02, batch_size=16)
-    # optimizer = RMSProp(default_graph, loss, 0.02, 0.9, 16)
-    optimizer = Adam(default_graph, loss, 0.02, 0.9, 0.99, 16)
+
+    # 使用各种优化算法算法
+    opt_type = 'Momentum'
+    if opt_type == 'GradientDescent':
+        optimizer = GradientDescent(default_graph, loss, 0.02, 16)
+    elif opt_type == 'AdaGrad':
+        optimizer = AdaGrad(default_graph, loss, 0.02, 0.9, 16)
+    elif opt_type == 'RMSProp':
+        optimizer = RMSProp(default_graph, loss, 0.02, 0.9, 16)
+    elif opt_type == 'Momentum':
+        optimizer = Momentum(default_graph, loss, 0.02, 0.9, 16)
+    else:
+        optimizer = Adam(default_graph, loss, 0.02, 0.9, 0.99, 16)
+
     for epoch in range(epoches):
         # 每个 epoch 开始时在测试集上评估模型正确率
         probs = []
@@ -150,9 +160,9 @@ def train(train_x, train_y, test_x, test_y, epoches):
     return w, b
 
 
-FEATURE_DIM = 5
+FEATURE_DIM = 20
 if __name__ == '__main__':
     # 随机构造训练数据
     train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
-    w, b = train(train_x, train_y, test_x, test_y, 3)
+    w, b = train(train_x, train_y, test_x, test_y, 8)
     plot_data(test_x, test_y, w.value, b.value)
