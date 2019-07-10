@@ -9,6 +9,7 @@ import numpy as np
 from core.graph import default_graph
 from optimizer import Optimizer
 from ops.loss import LossFunction
+from ops.metrics import Accuracy
 from util import ClassMining
 from sklearn.metrics import accuracy_score
 
@@ -57,24 +58,16 @@ class Trainer(object):
         '''
         probs = []
         losses = []
+
+        accuracy_op = Accuracy(self.logits, self.input_y)
         for i in range(len(test_x)):
             self.input_x.set_value(np.mat(test_x[i, :]))
             self.input_y.set_value(np.mat(test_y[i, 0]))
 
-            # 前向传播计算概率
-            self.logits.forward()
-            probs.append(self.logits.value.A1)
+            accuracy_op.forward()
 
-            # 计算损失值
-            self.loss_op.forward()
-            losses.append(self.loss_op.value.A1)
-
-        # 大于0.5的认为是正样本
-        pred = np.array([1 if x >= 0.5 else 0 for x in probs])
-        accuracy = accuracy_score(test_y.flatten(), pred)
-
-        print("Epoch: {:d}，损失值：{:.3f}，正确率：{:.2f}%".format(
-            self.epoch + 1, np.mean(losses), accuracy * 100))
+        print("BB Epoch: {:d}，损失值：{:.3f}，正确率：{:.2f}%".format(
+            self.epoch + 1, np.mean(losses), accuracy_op.value * 100))
 
     def main_loop(self, train_x, train_y, test_x, test_y):
         '''
