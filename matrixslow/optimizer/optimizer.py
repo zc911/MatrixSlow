@@ -5,20 +5,20 @@ Created on Wed Jun  5 15:25:06 2019
 @author: zhangjuefei
 """
 
-from core.graph import Graph, default_graph
 from core.node import *
 
 
-class Optimizer:
+class GradientDescent:
     """
     优化器基类
     """
 
-    def __init__(self, graph, target, batch_size=12):
+    def __init__(self, graph, target, learning_rate=0.01, batch_size=12):
         assert isinstance(target, Node) and isinstance(graph, Graph)
         self.graph = graph
         self.target = target
         self.batch_size = batch_size
+        self.learning_rate = learning_rate
 
         # 为每个参与训练的节点累加一个Mini Batch的全部样本的梯度
         self.acc_gradient = dict()
@@ -45,10 +45,13 @@ class Optimizer:
 
     def update(self):
         """
-        抽象方法，利用梯度更新可训练变量
+        利用梯度更新可训练变量
         """
+        for node in self.graph.nodes:
+            if isinstance(node, Variable) and node.trainable:
+                gradient = self.get_gradient(node)
 
-        pass
+                node.set_value(node.value - self.learning_rate * gradient)
 
     def forward_backward(self):
         """
@@ -73,21 +76,3 @@ class Optimizer:
                     self.acc_gradient[node] = gradient
                 else:
                     self.acc_gradient[node] += gradient
-
-
-class GradientDescent(Optimizer):
-    """
-    梯度下降优化器
-    """
-
-    def __init__(self, graph, target, learning_rate=0.01, batch_size=32):
-        Optimizer.__init__(self, graph, target, batch_size)
-        self.learning_rate = learning_rate
-
-    def update(self):
-
-        for node in self.graph.nodes:
-            if isinstance(node, Variable) and node.trainable:
-                gradient = self.get_gradient(node)
-
-                node.set_value(node.value - self.learning_rate * gradient)
