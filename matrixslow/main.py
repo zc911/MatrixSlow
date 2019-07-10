@@ -23,31 +23,56 @@ sys.path.append('.')
 
 def plot_data(data_x, data_y, weights=None, bias=None):
     '''
-    绘制数据节点和线性模型，只绘制二维
+    绘制数据节点和线性模型，只绘制2维或3维
+    如果特征维度>3,默认使用前3个特征绘制
     '''
     import matplotlib.pyplot as plt
+    from mpl_toolkits.mplot3d import Axes3D
     assert len(data_x) == len(data_y)
+    data_dim = data_x.shape[1]
+    plot_3d = False if data_dim < 3 else True
+
     xcord1 = []
     ycord1 = []
+    zcord1 = []
     xcord2 = []
     ycord2 = []
+    zcord2 = []
     for i in range(data_x.shape[0]):
         if int(data_y[i]) == 1:
             xcord1.append(data_x[i, 0])
             ycord1.append(data_x[i, 1])
+            if plot_3d:
+                zcord1.append(data_x[i, 2])
         else:
             xcord2.append(data_x[i, 0])
             ycord2.append(data_x[i, 1])
+            if plot_3d:
+                zcord2.append(data_x[i, 2])
     fig = plt.figure()
-    ax = fig.add_subplot(111)
-    ax.scatter(xcord1, ycord1, s=30, c='red', marker='s')
-    ax.scatter(xcord2, ycord2, s=30, c='green')
+    if plot_3d:
+        ax = Axes3D(fig)
+        ax.scatter(xcord1, ycord1, zcord1, s=30, c='red', marker='s')
+        ax.scatter(xcord2, ycord2, zcord2, s=30, c='green')
+    else:
+        ax = fig.add_subplot(111)
+        ax.scatter(xcord1, ycord1, s=30, c='red', marker='s')
+        ax.scatter(xcord2, ycord2, s=30, c='green')
+
     if weights is not None and bias is not None:
-        x = np.arange(-1.0, 1.0, 0.1)
+        x1 = np.arange(-1.0, 1.0, 0.1)
+        if plot_3d:
+            x2 = np.arange(-1.0, 1.0, 0.1)
+            x1, x2 = np.meshgrid(x1, x2)
         weights = np.array(weights)
         bias = np.array(bias)
-        y = (-weights[0][0] * x - bias[0][0]) / weights[1][0]
-        ax.plot(x, y)
+        if plot_3d:
+            y = (-weights[0][0] * x1 -
+                 weights[1][0] * x2 - bias[0][0]) / weights[2][0]
+            ax.plot_surface(x1, x2, y)
+        else:
+            y = (-weights[0][0] * x1 - bias[0][0]) / weights[1][0]
+            ax.plot(x1, y)
     plt.show()
 
 
@@ -127,5 +152,5 @@ FEATURE_DIM = 2
 if __name__ == '__main__':
     # 随机构造训练数据
     train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
-    w, b = train(train_x, train_y, test_x, test_y, 8)
-    plot_data(test_x[:, :2], test_y[:, 0], w.value, b.value)
+    w, b = train(train_x, train_y, test_x, test_y, 3)
+    plot_data(test_x, test_y, w.value, b.value)
