@@ -12,10 +12,11 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 from core.graph import default_graph
-from core.node import Variable
+from core import Variable
 from ops.loss import LogLoss
-from ops.ops import Add, Logistic, MatMul
-from optimizer.optimizer import GradientDescent, AdaGrad, RMSProp, Adam, Momentum
+from ops import Add, Logistic, MatMul
+from trainer import Trainer
+# from optimizer.optimizer import GradientDescent, AdaGrad, RMSProp, Adam, Momentum
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -111,56 +112,16 @@ def train(train_x, train_y, test_x, test_y, epoches):
     x, logit, w, b = build_model(FEATURE_DIM)
     y = Variable((1, 1), init=False, trainable=False)
     # 对logit施加Logistic函数(sigmoid)
-    y_hat = Logistic(logit)
+    logits = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
-    loss = LogLoss(y_hat, y)
+    trainer = Trainer(x, y, logits, 'LogLoss', 'Momentum',
+                      epoches=10, eval_on_train=True)
+    trainer.train(train_x, train_y, test_x, test_y)
 
-    # 使用各种优化算法算法
-    opt_type = 'Momentum'
-    if opt_type == 'GradientDescent':
-        optimizer = GradientDescent(default_graph, loss, 0.02, 16)
-    elif opt_type == 'AdaGrad':
-        optimizer = AdaGrad(default_graph, loss, 0.02, 0.9, 16)
-    elif opt_type == 'RMSProp':
-        optimizer = RMSProp(default_graph, loss, 0.02, 0.9, 16)
-    elif opt_type == 'Momentum':
-        optimizer = Momentum(default_graph, loss, 0.02, 0.9, 16)
-    else:
-        optimizer = Adam(default_graph, loss, 0.02, 0.9, 0.99, 16)
-
-    for epoch in range(epoches):
-        # 每个 epoch 开始时在测试集上评估模型正确率
-        probs = []
-        losses = []
-        for i in range(len(test_x)):
-            x.set_value(np.mat(test_x[i, :]))
-            y.set_value(np.mat(test_y[i, 0]))
-
-            # 前向传播计算概率
-            y_hat.forward()
-            probs.append(y_hat.value.A1)
-
-            # 计算损失值
-            loss.forward()
-            losses.append(loss.value.A1)
-
-        # 大于0.5的认为是正样本
-        pred = np.array([1 if x >= 0.5 else 0 for x in probs])
-        accuracy = accuracy_score(test_y.flatten(), pred)
-
-        print("Epoch: {:d}，损失值：{:.3f}，正确率：{:.2f}%".format(
-            epoch + 1, np.mean(losses), accuracy * 100))
-
-        for i in range(len(train_x)):
-            x.set_value(np.mat(train_x[i, :]))
-            y.set_value(np.mat(train_y[i, 0]))
-            optimizer.one_step()
-
-    # 返回训练好的模型参数
     return w, b
 
 
-FEATURE_DIM = 20
+FEATURE_DIM = 5
 if __name__ == '__main__':
     # 随机构造训练数据
     train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)

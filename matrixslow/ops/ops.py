@@ -7,7 +7,7 @@ Created on Wed Jun  5 15:23:01 2019
 """
 import numpy as np
 
-from core.node import Node
+from core import Node
 
 
 def fill_diagonal(to_be_filled, filler):
