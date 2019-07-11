@@ -8,7 +8,6 @@ Created on Wed Jul 10 17:34:46 CST 2019
 import numpy as np
 
 from core import Node
-from ops import Add, MatMul
 
 
 class Metrics(Node):

@@ -6,12 +6,12 @@ Created on Wed Jul 10 15:19:42 CST 2019
 @author: chenzhen
 """
 import numpy as np
+
 from core.graph import default_graph
-from optimizer import Optimizer
 from ops.loss import LossFunction
 from ops.metrics import Metrics
+from optimizer import Optimizer
 from util import ClassMining
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
 
 
 class Trainer(object):
@@ -110,7 +110,8 @@ class Trainer(object):
                 self.one_step(train_x[i], train_y[i])
                 if i % self.batch_size == 0:
                     self.optimizer.update()
-            print('Epoch [{}] train loss: {:.4f}'.format(self.epoch, float(self.loss_op.value)))
+            print('Epoch [{}] train loss: {:.4f}'.format(
+                self.epoch, float(self.loss_op.value)))
 
     def train(self, train_x, train_y, test_x=None, test_y=None):
         '''
