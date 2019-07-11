@@ -143,7 +143,7 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
             x.set_value(np.mat(train_x[i, :]))
             y.set_value(np.mat(train_y[i, 0]))
             optimizer.one_step()
-            if i % batch_size:
+            if i % batch_size == 0:
                 optimizer.update()
 
     # 返回训练好的模型参数
