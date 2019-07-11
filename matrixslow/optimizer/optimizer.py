@@ -4,6 +4,7 @@ Created on Wed Jun  5 15:25:06 2019
 
 @author: zhangjuefei
 """
+import abc
 
 from core import *
 
@@ -13,11 +14,11 @@ class Optimizer(object):
     优化器基类
     """
 
-    def __init__(self, graph, target, batch_size=12):
+    def __init__(self, graph, target, learning_rate=0.01):
         assert isinstance(target, Node) and isinstance(graph, Graph)
         self.graph = graph
         self.target = target
-        self.batch_size = batch_size
+        self.learning_rate = learning_rate
 
         # 为每个参与训练的节点累加一个Mini Batch的全部样本的梯度
         self.acc_gradient = dict()
@@ -25,29 +26,32 @@ class Optimizer(object):
 
     def one_step(self):
         """
-        计算并累加样本的梯度，一个Mini Batch结束后执行变量更新
+        计算并累加样本的梯度
         """
         self.forward_backward()
-
         self.acc_no += 1
-        if self.acc_no >= self.batch_size:
-            self.update()
-            self.acc_gradient.clear()  # 清除梯度累加
-            self.acc_no = 0  # 清除计数
 
     def get_gradient(self, node):
         """
-        返回一个Mini Batch的样本的平均梯度
+        返回样本的平均梯度
         """
         assert node in self.acc_gradient
-        return self.acc_gradient[node] / self.batch_size
+        return self.acc_gradient[node] / self.acc_no
 
-    def update(self):
-        """
-        抽象方法，利用梯度更新可训练变量
-        """
+    @abc.abstractmethod
+    def _update(self):
+        '''
+        抽象方法，执行具体的梯度更新算法，由子类实现
+        '''
 
-        pass
+    def update(self, var_gradients=None):
+        if var_gradients is not None:
+            # TODO update current gradients acc from
+            pass
+        self._update()
+        # 清除累计梯度
+        self.acc_gradient.clear()
+        self.acc_no = 0
 
     def forward_backward(self):
         """
@@ -79,11 +83,11 @@ class GradientDescent(Optimizer):
     梯度下降优化器
     """
 
-    def __init__(self, graph, target, learning_rate=0.01, batch_size=12):
-        Optimizer.__init__(self, graph, target, batch_size)
+    def __init__(self, graph, target, learning_rate=0.01):
+        Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
 
-    def update(self):
+    def _update(self):
         """
         利用梯度更新可训练变量
         """
@@ -99,15 +103,15 @@ class Momentum(Optimizer):
     Momentum动量梯度下降
     '''
 
-    def __init__(self, graph, target, learning_rate=0.01, momentun=0.9, batch_size=32):
-        Optimizer.__init__(self, graph, target, batch_size)
+    def __init__(self, graph, target, learning_rate=0.01, momentun=0.9):
+        Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
         # 动量参数，默认为0.9
         self.momentum = momentun
 
         self.v = dict()
 
-    def update(self):
+    def _update(self):
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 gradient = self.get_gradient(node)
@@ -125,14 +129,14 @@ class AdaGrad(Optimizer):
     AdaGrad优化器
     '''
 
-    def __init__(self, graph, target, learning_rate=0.01, beta=0.9, batch_size=32):
-        Optimizer.__init__(self, graph, target, batch_size)
+    def __init__(self, graph, target, learning_rate=0.01, beta=0.9):
+        Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
         self.beta = 0.9
 
         self.s = dict()
 
-    def update(self):
+    def _update(self):
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 gradient = self.get_gradient(node)
@@ -151,8 +155,8 @@ class RMSProp(Optimizer):
     RMSProp优化器
     """
 
-    def __init__(self, graph, target, learning_rate=0.01, beta=0.9, batch_size=32):
-        Optimizer.__init__(self, graph, target, batch_size)
+    def __init__(self, graph, target, learning_rate=0.01, beta=0.9):
+        Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
 
         assert 0.0 < beta < 1.0
@@ -160,7 +164,7 @@ class RMSProp(Optimizer):
 
         self.s = dict()
 
-    def update(self):
+    def _update(self):
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 gradient = self.get_gradient(node)
@@ -180,8 +184,8 @@ class Adam(Optimizer):
     Adam优化器
     """
 
-    def __init__(self, graph, target, learning_rate=0.01, beta_1=0.9, beta_2=0.99, batch_size=32):
-        Optimizer.__init__(self, graph, target, batch_size)
+    def __init__(self, graph, target, learning_rate=0.01, beta_1=0.9, beta_2=0.99):
+        Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
 
         assert 0.0 < beta_1 < 1.0
@@ -193,7 +197,7 @@ class Adam(Optimizer):
         self.s = dict()
         self.v = dict()
 
-    def update(self):
+    def _update(self):
 
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:

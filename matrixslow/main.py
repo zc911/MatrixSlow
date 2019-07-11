@@ -106,7 +106,7 @@ def build_model(feature_num):
     return x, logit, w, b
 
 
-def train(train_x, train_y, test_x, test_y, epoches):
+def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
     y = Variable((1, 1), init=False, trainable=False)
@@ -116,17 +116,17 @@ def train(train_x, train_y, test_x, test_y, epoches):
     loss = LogLoss(y_hat, y)
 
     # 使用各种优化算法算法
-    opt_type = 'Momentum'
+    opt_type = 'GradientDescent'
     if opt_type == 'GradientDescent':
-        optimizer = GradientDescent(default_graph, loss, 0.02, 16)
+        optimizer = GradientDescent(default_graph, loss, 0.02)
     elif opt_type == 'AdaGrad':
-        optimizer = AdaGrad(default_graph, loss, 0.02, 0.9, 16)
+        optimizer = AdaGrad(default_graph, loss, 0.02, 0.9)
     elif opt_type == 'RMSProp':
-        optimizer = RMSProp(default_graph, loss, 0.02, 0.9, 16)
+        optimizer = RMSProp(default_graph, loss, 0.02, 0.9)
     elif opt_type == 'Momentum':
-        optimizer = Momentum(default_graph, loss, 0.02, 0.9, 16)
+        optimizer = Momentum(default_graph, loss, 0.02, 0.9)
     else:
-        optimizer = Adam(default_graph, loss, 0.02, 0.9, 0.99, 16)
+        optimizer = Adam(default_graph, loss, 0.02, 0.9, 0.99)
 
     for epoch in range(epoches):
         # 每个 epoch 开始时在测试集上评估模型正确率
@@ -155,14 +155,20 @@ def train(train_x, train_y, test_x, test_y, epoches):
             x.set_value(np.mat(train_x[i, :]))
             y.set_value(np.mat(train_y[i, 0]))
             optimizer.one_step()
+            if i % batch_size == 0:
+                # print('Iteration {} and apply gradients update'.format(i))
+                optimizer.update()
 
     # 返回训练好的模型参数
     return w, b
 
-
-FEATURE_DIM = 5
+SAMPLE_NUM = 1000
+FEATURE_DIM = 4
+TOTAL_EPOCHES = 8
+BATCH_SIZE = 8
 if __name__ == '__main__':
     # 随机构造训练数据
-    train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
-    w, b = train(train_x, train_y, test_x, test_y, 8)
+
+    train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, SAMPLE_NUM)
+    w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
     plot_data(test_x, test_y, w.value, b.value)
