@@ -4,6 +4,7 @@ Created on Wed Jun  5 15:23:01 2019
 
 @author: zhangjuefei
 """
+import abc
 
 import numpy as np
 
@@ -58,17 +59,17 @@ class Node(object):
 
         self.compute()
 
+    @abc.abstractmethod
     def compute(self):
         """
         抽象方法，根据父节点的值计算本节点的值
         """
-        pass
 
+    @abc.abstractmethod
     def get_jacobi(self, parent):
         """
         抽象方法，计算本节点对某个父节点的雅可比矩阵
         """
-        pass
 
     def backward(self, result):
         """

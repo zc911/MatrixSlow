@@ -106,7 +106,7 @@ def build_model(feature_num):
     return x, logit, w, b
 
 
-def train(train_x, train_y, test_x, test_y, epoches):
+def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
     y = Variable((1, 1), init=False, trainable=False)
@@ -114,15 +114,21 @@ def train(train_x, train_y, test_x, test_y, epoches):
     logits = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
     trainer = Trainer(x, y, logits, 'LogLoss', 'Momentum',
-                      epoches=10, eval_on_train=True)
+                      epoches=10, eval_on_train=True,
+                      metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
 
 
-FEATURE_DIM = 5
+SAMPLE_NUM = 1000
+FEATURE_DIM = 4
+TOTAL_EPOCHES = 8
+BATCH_SIZE = 8
 if __name__ == '__main__':
     # 随机构造训练数据
-    train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
-    w, b = train(train_x, train_y, test_x, test_y, 8)
+
+    train_x, train_y, test_x, test_y = random_gen_dateset(
+        FEATURE_DIM, SAMPLE_NUM)
+    w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
     plot_data(test_x, test_y, w.value, b.value)
