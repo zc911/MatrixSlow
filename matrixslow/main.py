@@ -127,7 +127,6 @@ TOTAL_EPOCHES = 8
 BATCH_SIZE = 8
 if __name__ == '__main__':
     # 随机构造训练数据
-
     train_x, train_y, test_x, test_y = random_gen_dateset(
         FEATURE_DIM, SAMPLE_NUM)
     w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
