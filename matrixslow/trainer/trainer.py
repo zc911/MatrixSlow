@@ -91,7 +91,7 @@ class Trainer(object):
         # print("Sklearn Epoch: {:d}, Accuracy: {:.2f}%  Precision: {:.2f}% Recall: {:.2f}% F1Score: {:.2f}%".format(
         #     self.epoch + 1,  accuracy * 100, precision * 100, recall * 100, f1 * 100))
 
-        metrics_str = 'Eval metrics on epoch {}: '.format(self.epoch)
+        metrics_str = 'Epoch [{}] '.format(self.epoch)
         for metrics_op in self.metrics_ops:
             metrics_str += metrics_op.value_str()
         print(metrics_str)
@@ -110,6 +110,7 @@ class Trainer(object):
                 self.one_step(train_x[i], train_y[i])
                 if i % self.batch_size == 0:
                     self.optimizer.update()
+            print('Epoch [{}] train loss: {:.4f}'.format(self.epoch, float(self.loss_op.value)))
 
     def train(self, train_x, train_y, test_x=None, test_y=None):
         '''
