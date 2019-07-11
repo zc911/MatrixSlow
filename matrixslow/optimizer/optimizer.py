@@ -5,10 +5,10 @@ Created on Wed Jun  5 15:25:06 2019
 @author: zhangjuefei
 """
 
-from core.node import *
+from core import *
 
 
-class GradientDescent:
+class GradientDescent(object):
     """
     优化器基类
     """

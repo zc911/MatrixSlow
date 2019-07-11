@@ -6,10 +6,11 @@ Created on Wed Jun  5 15:23:01 2019
 """
 
 import numpy as np
+
 from .graph import Graph, default_graph
 
 
-class Node:
+class Node(object):
     """
     计算图节点类基类
     """

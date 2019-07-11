@@ -11,11 +11,11 @@ import matplotlib
 import numpy as np
 from sklearn.metrics import accuracy_score
 
+from core import Variable
 from core.graph import default_graph
-from core.node import Variable
+from ops import Add, Logistic, MatMul
 from ops.loss import LogLoss
-from ops.ops import Add, Logistic, MatMul
-from optimizer.optimizer import GradientDescent
+from optimizer import GradientDescent
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -148,7 +148,7 @@ def train(train_x, train_y, test_x, test_y, epoches):
     return w, b
 
 
-FEATURE_DIM = 2
+FEATURE_DIM = 5
 if __name__ == '__main__':
     # 随机构造训练数据
     train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
