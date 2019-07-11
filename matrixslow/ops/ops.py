@@ -7,7 +7,7 @@ Created on Wed Jun  5 15:23:01 2019
 """
 import numpy as np
 
-from core.node import Node
+from core import Node
 
 
 def fill_diagonal(to_be_filled, filler):
@@ -25,7 +25,14 @@ def fill_diagonal(to_be_filled, filler):
     return to_be_filled
 
 
-class Add(Node):
+class Operator(Node):
+    '''
+    定义操作符抽象类
+    '''
+    pass
+
+
+class Add(Operator):
     """
     矩阵加法
     """
@@ -39,7 +46,7 @@ class Add(Node):
         return np.mat(np.eye(self.dimension()))  # 矩阵之和对其中任一个矩阵的雅可比矩阵是单位矩阵
 
 
-class MatMul(Node):
+class MatMul(Operator):
     """
     矩阵乘法
     """
@@ -67,7 +74,7 @@ class MatMul(Node):
             return jacobi[row_sort, :][:, col_sort]
 
 
-class Logistic(Node):
+class Logistic(Operator):
     """
     对向量的分量施加Logistic函数
     """

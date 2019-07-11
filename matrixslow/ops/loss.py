@@ -7,10 +7,17 @@ Created on Wed July  9 15:13:01 2019
 
 import numpy as np
 
-from core.node import Node
+from core import Node
 
 
-class LogLoss(Node):
+class LossFunction(Node):
+    '''
+    定义损失函数抽象类
+    '''
+    pass
+
+
+class LogLoss(LossFunction):
     eps = 1e-15
 
     def compute(self):
