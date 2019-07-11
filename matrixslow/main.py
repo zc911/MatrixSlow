@@ -106,7 +106,7 @@ def build_model(feature_num):
     return x, logit, w, b
 
 
-def train(train_x, train_y, test_x, test_y, epoches):
+def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
     y = Variable((1, 1), init=False, trainable=False)
@@ -115,7 +115,7 @@ def train(train_x, train_y, test_x, test_y, epoches):
     # 计算预测值和标签值的log loss，作为损失函数
     loss = LogLoss(y_hat, y)
     # 使用梯度下降优化算法
-    optimizer = GradientDescent(default_graph, loss, 0.02, batch_size=16)
+    optimizer = GradientDescent(default_graph, loss, learning_rate=0.02)
     for epoch in range(epoches):
         # 每个 epoch 开始时在测试集上评估模型正确率
         probs = []
@@ -143,14 +143,19 @@ def train(train_x, train_y, test_x, test_y, epoches):
             x.set_value(np.mat(train_x[i, :]))
             y.set_value(np.mat(train_y[i, 0]))
             optimizer.one_step()
+            if i % batch_size:
+                optimizer.update()
 
     # 返回训练好的模型参数
     return w, b
 
-
+SAMPLE_NUM = 1000
 FEATURE_DIM = 5
+TOTAL_EPOCHES = 3
+BATCH_SIZE = 8
 if __name__ == '__main__':
     # 随机构造训练数据
-    train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, 1500)
-    w, b = train(train_x, train_y, test_x, test_y, 3)
+
+    train_x, train_y, test_x, test_y = random_gen_dateset(FEATURE_DIM, SAMPLE_NUM)
+    w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
     plot_data(test_x, test_y, w.value, b.value)
