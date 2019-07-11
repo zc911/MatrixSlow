@@ -66,8 +66,8 @@ class Trainer(object):
 
             accuracy_op.forward()
 
-        print("BB Epoch: {:d}，损失值：{:.3f}，正确率：{:.2f}%".format(
-            self.epoch + 1, np.mean(losses), accuracy_op.value * 100))
+        print("Epoch: {:d}，正确率：{:.2f}%".format(
+            self.epoch + 1,  accuracy_op.value * 100))
 
     def main_loop(self, train_x, train_y, test_x, test_y):
         '''

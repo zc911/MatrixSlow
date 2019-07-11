@@ -11,6 +11,9 @@ from core import Node
 
 
 class LossFunction(Node):
+    '''
+    定义损失函数抽象类
+    '''
     pass
 
 

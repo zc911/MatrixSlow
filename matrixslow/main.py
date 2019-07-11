@@ -11,12 +11,11 @@ import matplotlib
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-from core.graph import default_graph
 from core import Variable
-from ops.loss import LogLoss
+from core.graph import default_graph
 from ops import Add, Logistic, MatMul
+from ops.loss import LogLoss
 from trainer import Trainer
-# from optimizer.optimizer import GradientDescent, AdaGrad, RMSProp, Adam, Momentum
 
 matplotlib.use('TkAgg')
 sys.path.append('.')

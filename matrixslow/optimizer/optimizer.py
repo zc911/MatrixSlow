@@ -4,12 +4,13 @@ Created on Wed Jun  5 15:25:06 2019
 
 @author: zhangjuefei
 """
+import numpy as np
 
 from core import Node, Variable
 from core.graph import Graph
 
 
-class Optimizer:
+class Optimizer(object):
     """
     优化器基类
     """

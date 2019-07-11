@@ -29,7 +29,8 @@ class Accuracy(Metrics):
         assert len(pred) == len(gt)
         self.correct_num += np.sum(pred == gt)
         self.total_num += len(pred)
-        self.value = float(self.correct_num) / self.total_num
+        if self.total_num != 0:
+            self.value = float(self.correct_num) / self.total_num
 
     def get_jacobi(self):
         raise NotImplementedError()
