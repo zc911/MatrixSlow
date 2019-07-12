@@ -107,17 +107,24 @@ def build_model(feature_num):
     '''
     构建DNN计算图网络
     '''
-    x = Variable((feature_num, 1), init=False, trainable=False)
-    w1 = Variable((HIDDEN1_SIZE, feature_num), init=True, trainable=True)
-    b1 = Variable((HIDDEN1_SIZE, 1), init=True, trainable=True)
-    w2 = Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True, trainable=True)
-    b2 = Variable((HIDDEN2_SIZE, 1), init=True, trainable=True)
-    w3 = Variable((CLASSES, HIDDEN2_SIZE), init=True, trainable=True)
-    b3 = Variable((CLASSES, 1), init=True, trainable=True)
+    x = Variable((feature_num, 1), init=False,
+                 trainable=False, name='placeholder_x')
+    w1 = Variable((HIDDEN1_SIZE, feature_num), init=True,
+                  trainable=True, name='weights_w1')
+    b1 = Variable((HIDDEN1_SIZE, 1), init=True,
+                  trainable=True, name='bias_b1')
+    w2 = Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True,
+                  trainable=True, name='weights_w2')
+    b2 = Variable((HIDDEN2_SIZE, 1), init=True,
+                  trainable=True, name='bias_b2')
+    w3 = Variable((CLASSES, HIDDEN2_SIZE), init=True,
+                  trainable=True, name='weights_w3')
+    b3 = Variable((CLASSES, 1), init=True,
+                  trainable=True, name='bias_b3')
 
-    hidden1 = ReLU(Add(MatMul(w1, x), b1))
-    hidden2 = ReLU(Add(MatMul(w2, hidden1), b2))
-    logit = Add(MatMul(w3, hidden2), b3)
+    hidden1 = ReLU(Add(MatMul(w1, x), b1), name='hidden1')
+    hidden2 = ReLU(Add(MatMul(w2, hidden1), b2), name='hidden2')
+    logit = Add(MatMul(w3, hidden2), b3, name='logits')
 
     return x, logit, w1, b1
 
@@ -135,8 +142,9 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logits, w, b = build_model(FEATURE_DIM)
 
-    y = Variable((CLASSES, 1), init=False, trainable=False)
-    loss_op = CrossEntropyWithSoftMax(logits, y)
+    y = Variable((CLASSES, 1), init=False,
+                 trainable=False, name='placeholder_y')
+    loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Momentum(default_graph, loss_op)
     trainer = Trainer(x, y, logits, loss_op, optimizer_op,
                       epoches=epoches, batch_size=batch_size,
@@ -146,9 +154,9 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     trainer.train(train_x, train_y, test_x, test_y)
 
-    saver = Saver()
-    saver.save()
-    saver.load()
+    # saver = Saver()
+    # saver.save()
+    # saver.load()
 
     return w, b
 
@@ -162,5 +170,6 @@ HIDDEN2_SIZE = 2
 CLASSES = 10
 if __name__ == '__main__':
     train_x, train_y, test_x, test_y = util.mnist('../MNIST/dataset')
-    w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
+    w, b = train(train_x[:1000], train_y[:1000], test_x[:200],
+                 test_y[:200], TOTAL_EPOCHES, BATCH_SIZE)
     # plot_data(test_x, test_y, w.value, b.value)
