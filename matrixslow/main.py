@@ -15,7 +15,10 @@ from core import Variable
 from core.graph import default_graph
 from ops import Add, Logistic, MatMul
 from ops.loss import LogLoss
+from ops.metrics import Metrics
+from optimizer import *
 from trainer import Trainer
+from util import ClassMining
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -106,6 +109,15 @@ def build_model(feature_num):
     return x, logit, w, b
 
 
+def build_metrics(logits, y, metrics_names=None):
+    metrics_ops = []
+    for m_name in metrics_names:
+        metrics_ops.append(ClassMining.get_instance_by_subclass_name(
+            Metrics, m_name)(logits, y))
+
+    return metrics_ops
+
+
 def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
@@ -114,10 +126,12 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
     logits = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
     loss_op = LogLoss(logits, y)
-    trainer = Trainer(x, y, logits, loss_op, 'Momentum',
+    optimizer_op = optimizer.Momentum(default_graph, loss_op)
+    trainer = Trainer(x, y, logits, loss_op, optimizer_op,
                       epoches=epoches, batch_size=batch_size,
                       eval_on_train=True,
-                      metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
+                      metrics_ops=build_metrics(
+                          logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
