@@ -34,6 +34,9 @@ class Graph:
         for node in self.nodes:
             node.reset_value(False)  # 每个节点不递归清除自己的子节点的值
 
+    def node_count(self):
+        return len(self.nodes)
+
     def draw(self, ax=None):
         try:
             import networkx as nx
