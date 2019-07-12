@@ -16,11 +16,13 @@ class Saver(object):
             pass
         print('save to model.plk')
         print(default_graph.nodes)
-        savefile = open('./model.pkl', 'w')
+        savefile = open('./model.pkl', 'wb')
         pickle.dump(default_graph, savefile)
         savefile.close()
 
     def load(self, model=None, weights=None, to_graph=None):
+        model_file = open('./model.pkl', 'rb')
         print('load from model.pkl')
-        graph = pickle.load('./model.plk')
+        graph = pickle.load(model_file)
         print(graph.nodes)
+        model_file.close()
