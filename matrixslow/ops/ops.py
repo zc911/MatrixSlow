@@ -89,6 +89,19 @@ class Logistic(Operator):
         return np.diag(np.mat(np.multiply(self.value, 1 - self.value)).A1)
 
 
+class ReLU(Operator):
+    """
+    对矩阵的元素施加ReLU函数
+    """
+
+    def compute(self):
+        self.value = np.mat(np.where(
+            self.parents[0].value > 0.0, self.parents[0].value, 0.1 * self.parents[0].value))  # 对父节点的每个分量施加 logistic
+
+    def get_jacobi(self, parent):
+        return np.diag(np.where(self.parents[0].value.A1 > 0.0, 1.0, 0.1))
+
+
 class SoftMax(Operator):
     """
     SoftMax函数

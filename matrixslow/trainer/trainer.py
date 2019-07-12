@@ -70,26 +70,12 @@ class Trainer(object):
                 self.metrics_ops.append(ClassMining.get_instance_by_subclass_name(
                     Metrics, metrics_name)(self.logits, self.input_y))
 
-        # probs = []
-        # losses = []
         for i in range(len(test_x)):
             self.input_x.set_value(np.mat(test_x[i]).T)
             self.input_y.set_value(np.mat(test_y[i]).T)
 
             for metrics_op in self.metrics_ops:
                 metrics_op.forward()
-
-            # self.logits.forward()
-            # probs.append(self.logits.value.A1)
-
-        # pred = np.array([1 if x >= 0.5 else 0 for x in probs])
-        # accuracy = accuracy_score(test_y.flatten(), pred)
-        # precision = precision_score(test_y.flatten(), pred)
-        # recall = recall_score(test_y.flatten(), pred)
-        # f1 = f1_score(test_y.flatten(), pred)
-
-        # print("Sklearn Epoch: {:d}, Accuracy: {:.2f}%  Precision: {:.2f}% Recall: {:.2f}% F1Score: {:.2f}%".format(
-        #     self.epoch + 1,  accuracy * 100, precision * 100, recall * 100, f1 * 100))
 
         metrics_str = 'Epoch [{}] '.format(self.epoch)
         for metrics_op in self.metrics_ops:
@@ -101,10 +87,8 @@ class Trainer(object):
         训练（验证）的主循环
         '''
         for self.epoch in range(self.epoches):
-
-            if self.eval_on_train and test_x is not None and test_y is not None:
-                self.eval(test_x, test_y)
-
+            print('Epoch [{}] train start, train data dim: {}'.format(
+                self.epoch, train_x.shape))
             # TODO improve the batch mechanism
             for i in range(len(train_x)):
                 self.one_step(train_x[i], train_y[i])
@@ -112,6 +96,9 @@ class Trainer(object):
                     self.optimizer.update()
             print('Epoch [{}] train loss: {:.4f}'.format(
                 self.epoch, float(self.loss_op.value)))
+
+            if self.eval_on_train and test_x is not None and test_y is not None:
+                self.eval(test_x, test_y)
 
     def train(self, train_x, train_y, test_x=None, test_y=None):
         '''

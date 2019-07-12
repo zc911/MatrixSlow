@@ -13,7 +13,7 @@ from sklearn.metrics import accuracy_score
 
 from core import Variable
 from core.graph import default_graph
-from ops import Add, Logistic, MatMul, SoftMax
+from ops import Add, Logistic, MatMul, SoftMax, ReLU
 from ops.loss import LogLoss
 from trainer import Trainer
 from util import *
@@ -97,25 +97,28 @@ def random_gen_dateset(feature_num, sample_num, test_radio=0.3, seed=41):
 
 def build_model(feature_num):
     '''
-    构建LR计算图模型
+    构建DNN计算图网络
     '''
     x = Variable((feature_num, 1), init=False, trainable=False)
-    w = Variable((10, feature_num), init=True, trainable=True)
-    b = Variable((10, 1), init=True, trainable=True)
+    w1 = Variable((HIDDEN1_SIZE, feature_num), init=True, trainable=True)
+    b1 = Variable((HIDDEN1_SIZE, 1), init=True, trainable=True)
+    w2 = Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True, trainable=True)
+    b2 = Variable((HIDDEN2_SIZE, 1), init=True, trainable=True)
+    w3 = Variable((CLASSES, HIDDEN2_SIZE), init=True, trainable=True)
+    b3 = Variable((CLASSES, 1), init=True, trainable=True)
 
-    logit = Add(MatMul(w, x), b)
+    hidden1 = ReLU(Add(MatMul(w1, x), b1))
+    hidden2 = ReLU(Add(MatMul(w2, hidden1), b2))
+    logit = Add(MatMul(w3, hidden2), b3)
 
-    return x, logit, w, b
+    return x, logit, w1, b1
 
 
 def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
-    y = Variable((10, 1), init=False, trainable=False)
-    # 对logit施加Logistic函数(sigmoid)
-    # logits = Logistic(logit)
-    # logits = SoftMax(logit)
-    # 计算预测值和标签值的log loss，作为损失函数
+    y = Variable((CLASSES, 1), init=False, trainable=False)
+
     trainer = Trainer(x, y, logit, 'CrossEntropyWithSoftMax', 'Adam',
                       epoches=epoches, batch_size=batch_size,
                       eval_on_train=True, metrics_names=['Accuracy'])
@@ -126,12 +129,12 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
 SAMPLE_NUM = 1000
 FEATURE_DIM = 784
-TOTAL_EPOCHES = 3
-BATCH_SIZE = 8
+TOTAL_EPOCHES = 5
+BATCH_SIZE = 32
+HIDDEN1_SIZE = 12
+HIDDEN2_SIZE = 8
+CLASSES = 10
 if __name__ == '__main__':
-    # 随机构造训练数据
-    # train_x, train_y, test_x, test_y = random_gen_dateset(
-    #     FEATURE_DIM, SAMPLE_NUM)
     train_x, train_y, test_x, test_y = util.mnist('../MNIST/dataset')
     w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
     # plot_data(test_x, test_y, w.value, b.value)
