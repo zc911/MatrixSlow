@@ -7,12 +7,6 @@ Created on Wed Jul 10 15:19:42 CST 2019
 """
 import numpy as np
 
-from core.graph import default_graph
-from ops.loss import LossFunction
-from ops.metrics import Metrics
-from optimizer import Optimizer
-from util import ClassMining
-
 
 class Trainer(object):
     '''
