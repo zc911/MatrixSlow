@@ -36,6 +36,9 @@ class Trainer(object):
         self.eval_on_train = eval_on_train
         self.metrics_ops = []
 
+        # 构建完整的计算图
+        self.setup_graph()
+
     def setup_graph(self):
         '''
         利用反射机制，实例化具体的损失函数和优化器
@@ -107,9 +110,6 @@ class Trainer(object):
         assert len(train_x) == len(train_y)
         if test_x is not None and test_y is not None:
             assert len(test_x) == len(test_y)
-
-        # 构建完整的计算图
-        self.setup_graph()
 
         # 传入数据，开始主循环
         self.main_loop(train_x, train_y, test_x, test_y)

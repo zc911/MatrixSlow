@@ -15,7 +15,7 @@ from core import Variable
 from core.graph import default_graph
 from ops import Add, Logistic, MatMul, SoftMax, ReLU
 from ops.loss import LogLoss
-from trainer import Trainer
+from trainer import Trainer, Saver
 from util import *
 
 matplotlib.use('TkAgg')
@@ -122,6 +122,11 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
     trainer = Trainer(x, y, logit, 'CrossEntropyWithSoftMax', 'Adam',
                       epoches=epoches, batch_size=batch_size,
                       eval_on_train=True, metrics_names=['Accuracy'])
+
+    saver = Saver()
+    saver.save()
+    saver.load()
+
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
