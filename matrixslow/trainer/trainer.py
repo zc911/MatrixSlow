@@ -53,8 +53,8 @@ class Trainer(object):
         '''
         执行一次前向计算和一次后向计算(可能)
         '''
-        self.input_x.set_value(np.mat(data_x))
-        self.input_y.set_value(np.mat(data_y))
+        self.input_x.set_value(np.mat(data_x).T)
+        self.input_y.set_value(np.mat(data_y).T)
 
         self.optimizer.one_step()
 
@@ -70,26 +70,12 @@ class Trainer(object):
                 self.metrics_ops.append(ClassMining.get_instance_by_subclass_name(
                     Metrics, metrics_name)(self.logits, self.input_y))
 
-        # probs = []
-        # losses = []
         for i in range(len(test_x)):
-            self.input_x.set_value(np.mat(test_x[i, :]))
-            self.input_y.set_value(np.mat(test_y[i, 0]))
+            self.input_x.set_value(np.mat(test_x[i]).T)
+            self.input_y.set_value(np.mat(test_y[i]).T)
 
             for metrics_op in self.metrics_ops:
                 metrics_op.forward()
-
-            # self.logits.forward()
-            # probs.append(self.logits.value.A1)
-
-        # pred = np.array([1 if x >= 0.5 else 0 for x in probs])
-        # accuracy = accuracy_score(test_y.flatten(), pred)
-        # precision = precision_score(test_y.flatten(), pred)
-        # recall = recall_score(test_y.flatten(), pred)
-        # f1 = f1_score(test_y.flatten(), pred)
-
-        # print("Sklearn Epoch: {:d}, Accuracy: {:.2f}%  Precision: {:.2f}% Recall: {:.2f}% F1Score: {:.2f}%".format(
-        #     self.epoch + 1,  accuracy * 100, precision * 100, recall * 100, f1 * 100))
 
         metrics_str = 'Epoch [{}] '.format(self.epoch)
         for metrics_op in self.metrics_ops:

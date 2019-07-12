@@ -16,9 +16,9 @@ class Metrics(Node):
     '''
     @staticmethod
     def prob_to_label(prob):
-        if prob.shape[1] > 1:
+        if prob.shape[0] > 1:
             # 如果是多分类，预测值为概率最大的标签
-            labels = np.argmax(prob, axis=1)
+            labels = np.argmax(prob, axis=0)
         else:
             # 否则以0.5作为thresholds
             labels = np.where(prob < 0.5, 0, 1)
@@ -47,8 +47,9 @@ class Accuracy(Metrics):
         计算Accrucy: (TP + TN) / TOTAL
         这里假设第一个父节点是预测值（概率），第二个父节点是标签
         '''
+
         pred = Metrics.prob_to_label(self.parents[0].value)
-        gt = self.parents[1].value
+        gt = Metrics.prob_to_label(self.parents[1].value)
         assert len(pred) == len(gt)
 
         self.correct_num += np.sum(pred == gt)
@@ -92,7 +93,6 @@ class Recall(Metrics):
         Metrics.__init__(self, *parents)
         self.gt_pos_num = 0
         self.true_pos_num = 0
-        self.value = 0
 
     def compute(self):
         '''

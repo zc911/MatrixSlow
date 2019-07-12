@@ -68,10 +68,10 @@ def plot_data(data_x, data_y, weights=None, bias=None):
         bias = np.array(bias)
         if plot_3d:
             y = (-weights[0][0] * x1 -
-                 weights[1][0] * x2 - bias[0][0]) / weights[2][0]
+                 weights[0][1] * x2 - bias[0][0]) / weights[0][2]
             ax.plot_surface(x1, x2, y)
         else:
-            y = (-weights[0][0] * x1 - bias[0][0]) / weights[1][0]
+            y = (-weights[0][0] * x1 - bias[0][0]) / weights[0][1]
             ax.plot(x1, y)
     plt.show()
 
@@ -98,11 +98,11 @@ def build_model(feature_num):
     '''
     构建LR计算图模型
     '''
-    x = Variable((1, feature_num), init=False, trainable=False)
-    w = Variable((feature_num, 1), init=True, trainable=True)
+    x = Variable((feature_num, 1), init=False, trainable=False)
+    w = Variable((1, feature_num), init=True, trainable=True)
     b = Variable((1, 1), init=True, trainable=True)
 
-    logit = Add(MatMul(x, w), b)
+    logit = Add(MatMul(w, x), b)
     return x, logit, w, b
 
 
@@ -114,8 +114,8 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
     logits = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
     trainer = Trainer(x, y, logits, 'LogLoss', 'Momentum',
-                      epoches=10, eval_on_train=True,
-                      metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
+                      epoches=epoches, batch_size=batch_size,
+                      eval_on_train=True, metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
