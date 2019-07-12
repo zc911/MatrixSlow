@@ -7,12 +7,6 @@ Created on Wed Jul 10 15:19:42 CST 2019
 """
 import numpy as np
 
-from core.graph import default_graph
-from ops.loss import LossFunction
-from ops.metrics import Metrics
-from optimizer import Optimizer
-from util import ClassMining
-
 
 class Trainer(object):
     '''
@@ -20,34 +14,20 @@ class Trainer(object):
     '''
 
     def __init__(self, input_x, input_y, logits,
-                 loss_op, optimizer_name,
+                 loss_op, optimizer,
                  epoches, batch_size=8,
-                 eval_on_train=False, metrics_names=None):
+                 eval_on_train=False, metrics_ops=None):
         self.input_x = input_x
         self.input_y = input_y
         self.logits = logits
         self.loss_op = loss_op
-        self.optimizer_name = optimizer_name
-        self.metrics_names = metrics_names
+        self.optimizer = optimizer
 
         self.epoches = epoches
         self.epoch = 0
-        self.batch_size = 8
+        self.batch_size = batch_size
         self.eval_on_train = eval_on_train
-        self.metrics_ops = []
-
-        # 构建完整的计算图
-        self.setup_graph()
-
-    def setup_graph(self):
-        '''
-        利用反射机制，实例化具体的优化器
-        '''
-
-        # 根据名称实例化一个具体的优化器实例
-        # TODO optimizer parameters
-        self.optimizer = ClassMining.get_instance_by_subclass_name(
-            Optimizer, self.optimizer_name)(default_graph, self.loss_op)
+        self.metrics_ops = metrics_ops
 
     def one_step(self, data_x, data_y):
         '''
@@ -62,13 +42,8 @@ class Trainer(object):
         '''
         在测试集合上进行算法评估
         '''
-
-        # 实例化metrics算子列表
-        if self.eval_on_train and len(self.metrics_names):
-            self.metrics_ops = []
-            for metrics_name in self.metrics_names:
-                self.metrics_ops.append(ClassMining.get_instance_by_subclass_name(
-                    Metrics, metrics_name)(self.logits, self.input_y))
+        for metrics_op in self.metrics_ops:
+            metrics_op.reset_value()
 
         for i in range(len(test_x)):
             self.input_x.set_value(np.mat(test_x[i]).T)
@@ -77,7 +52,7 @@ class Trainer(object):
             for metrics_op in self.metrics_ops:
                 metrics_op.forward()
 
-        metrics_str = 'Epoch [{}] '.format(self.epoch)
+        metrics_str = 'Epoch [{}] evaluation metrics '.format(self.epoch + 1)
         for metrics_op in self.metrics_ops:
             metrics_str += metrics_op.value_str()
         print(metrics_str)
@@ -94,7 +69,7 @@ class Trainer(object):
                 if i % self.batch_size == 0:
                     self.optimizer.update()
             print('Epoch [{}] train loss: {:.4f}'.format(
-                self.epoch, float(self.loss_op.value)))
+                self.epoch + 1, float(self.loss_op.value)))
 
             if self.eval_on_train and test_x is not None and test_y is not None:
                 self.eval(test_x, test_y)
