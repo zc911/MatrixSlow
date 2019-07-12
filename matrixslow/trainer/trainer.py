@@ -20,13 +20,13 @@ class Trainer(object):
     '''
 
     def __init__(self, input_x, input_y, logits,
-                 loss_fn_name, optimizer_name,
+                 loss_op, optimizer_name,
                  epoches, batch_size=8,
                  eval_on_train=False, metrics_names=None):
         self.input_x = input_x
         self.input_y = input_y
         self.logits = logits
-        self.loss_fn_name = loss_fn_name
+        self.loss_op = loss_op
         self.optimizer_name = optimizer_name
         self.metrics_names = metrics_names
 
@@ -38,11 +38,8 @@ class Trainer(object):
 
     def setup_graph(self):
         '''
-        利用反射机制，实例化具体的损失函数和优化器
+        利用反射机制，实例化具体的优化器
         '''
-        # 根据名称实例化一个具体的损失函数节点
-        self.loss_op = ClassMining.get_instance_by_subclass_name(
-            LossFunction, self.loss_fn_name)(self.logits, self.input_y)
 
         # 根据名称实例化一个具体的优化器实例
         # TODO optimizer parameters
@@ -88,9 +85,6 @@ class Trainer(object):
         '''
         for self.epoch in range(self.epoches):
 
-            if self.eval_on_train and test_x is not None and test_y is not None:
-                self.eval(test_x, test_y)
-
             # TODO improve the batch mechanism
             for i in range(len(train_x)):
                 self.one_step(train_x[i], train_y[i])
@@ -98,6 +92,9 @@ class Trainer(object):
                     self.optimizer.update()
             print('Epoch [{}] train loss: {:.4f}'.format(
                 self.epoch, float(self.loss_op.value)))
+
+            if self.eval_on_train and test_x is not None and test_y is not None:
+                self.eval(test_x, test_y)
 
     def train(self, train_x, train_y, test_x=None, test_y=None):
         '''

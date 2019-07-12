@@ -113,9 +113,11 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
     # 对logit施加Logistic函数(sigmoid)
     logits = Logistic(logit)
     # 计算预测值和标签值的log loss，作为损失函数
-    trainer = Trainer(x, y, logits, 'LogLoss', 'Momentum',
+    loss_op = LogLoss(logits, y)
+    trainer = Trainer(x, y, logits, loss_op, 'Momentum',
                       epoches=epoches, batch_size=batch_size,
-                      eval_on_train=True, metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
+                      eval_on_train=True,
+                      metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
