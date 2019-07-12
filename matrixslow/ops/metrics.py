@@ -15,13 +15,13 @@ class Metrics(Node):
     评估指标算子抽象基类
     '''
     @staticmethod
-    def logits_to_label(logits):
-        if logits.shape[0] > 1:
+    def prob_to_label(prob):
+        if prob.shape[0] > 1:
             # 如果是多分类，预测值为概率最大的标签
-            labels = np.argmax(logits, axis=0)
+            labels = np.argmax(prob, axis=0)
         else:
             # 否则以0.5作为thresholds
-            labels = np.where(logits < 0.5, 0, 1)
+            labels = np.where(prob < 0.5, 0, 1)
         return labels
 
     def get_jacobi(self):
@@ -47,8 +47,9 @@ class Accuracy(Metrics):
         计算Accrucy: (TP + TN) / TOTAL
         这里假设第一个父节点是预测值（概率），第二个父节点是标签
         '''
-        pred = Metrics.logits_to_label(self.parents[0].value)
-        gt = Metrics.logits_to_label(self.parents[1].value)
+
+        pred = Metrics.prob_to_label(self.parents[0].value)
+        gt = Metrics.prob_to_label(self.parents[1].value)
         assert len(pred) == len(gt)
 
         self.correct_num += np.sum(pred == gt)
@@ -74,7 +75,7 @@ class Precision(Metrics):
         '''
         assert self.parents[0].value.shape[1] == 1
 
-        pred = Metrics.logits_to_label(self.parents[0].value)
+        pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
         self.pred_pos_num += np.sum(pred)
         self.true_pos_num += np.multiply(pred, gt).sum()
@@ -99,7 +100,7 @@ class Recall(Metrics):
         '''
         assert self.parents[0].value.shape[1] == 1
 
-        pred = Metrics.logits_to_label(self.parents[0].value)
+        pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
         self.gt_pos_num += np.sum(gt)
         self.true_pos_num += np.multiply(pred, gt).sum()
