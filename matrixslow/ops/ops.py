@@ -87,3 +87,24 @@ class Logistic(Operator):
 
     def get_jacobi(self, parent):
         return np.diag(np.mat(np.multiply(self.value, 1 - self.value)).A1)
+
+
+class SoftMax(Operator):
+    """
+    SoftMax函数
+    """
+
+    @staticmethod
+    def softmax(a):
+        a[a > 1e2] = 1e2  # 防止指数过大
+        ep = np.power(np.e, a)
+        return ep / np.sum(ep)
+
+    def compute(self):
+        self.value = SoftMax.softmax(self.parents[0].value)
+
+    def get_jacobi(self, parent):
+        """
+        我们不实现SoftMax节点的get_jacobi函数，训练时使用CrossEntropyWithSoftMax节点（见下）
+        """
+        return np.mat(np.eye(self.dimension()))  # 无用

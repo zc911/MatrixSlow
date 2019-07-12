@@ -13,9 +13,10 @@ from sklearn.metrics import accuracy_score
 
 from core import Variable
 from core.graph import default_graph
-from ops import Add, Logistic, MatMul
+from ops import Add, Logistic, MatMul, SoftMax
 from ops.loss import LogLoss
 from trainer import Trainer
+from util import *
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -98,36 +99,39 @@ def build_model(feature_num):
     '''
     构建LR计算图模型
     '''
-    x = Variable((1, feature_num), init=False, trainable=False)
-    w = Variable((feature_num, 1), init=True, trainable=True)
-    b = Variable((1, 1), init=True, trainable=True)
+    x = Variable((feature_num, 1), init=False, trainable=False)
+    w = Variable((10, feature_num), init=True, trainable=True)
+    b = Variable((10, 1), init=True, trainable=True)
 
-    logit = Add(MatMul(x, w), b)
+    logit = Add(MatMul(w, x), b)
+
     return x, logit, w, b
 
 
 def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logit, w, b = build_model(FEATURE_DIM)
-    y = Variable((1, 1), init=False, trainable=False)
+    y = Variable((10, 1), init=False, trainable=False)
     # 对logit施加Logistic函数(sigmoid)
-    logits = Logistic(logit)
+    # logits = Logistic(logit)
+    # logits = SoftMax(logit)
     # 计算预测值和标签值的log loss，作为损失函数
-    trainer = Trainer(x, y, logits, 'LogLoss', 'Momentum',
-                      epoches=10, eval_on_train=True,
-                      metrics_names=['Accuracy', 'Recall', 'F1Score', 'Precision'])
+    trainer = Trainer(x, y, logit, 'CrossEntropyWithSoftMax', 'Adam',
+                      epoches=epoches, batch_size=batch_size,
+                      eval_on_train=True, metrics_names=['Accuracy'])
     trainer.train(train_x, train_y, test_x, test_y)
 
     return w, b
 
 
 SAMPLE_NUM = 1000
-FEATURE_DIM = 4
-TOTAL_EPOCHES = 8
+FEATURE_DIM = 784
+TOTAL_EPOCHES = 3
 BATCH_SIZE = 8
 if __name__ == '__main__':
     # 随机构造训练数据
-    train_x, train_y, test_x, test_y = random_gen_dateset(
-        FEATURE_DIM, SAMPLE_NUM)
+    # train_x, train_y, test_x, test_y = random_gen_dateset(
+    #     FEATURE_DIM, SAMPLE_NUM)
+    train_x, train_y, test_x, test_y = util.mnist('../MNIST/dataset')
     w, b = train(train_x, train_y, test_x, test_y, TOTAL_EPOCHES, BATCH_SIZE)
-    plot_data(test_x, test_y, w.value, b.value)
+    # plot_data(test_x, test_y, w.value, b.value)

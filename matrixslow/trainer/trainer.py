@@ -53,8 +53,8 @@ class Trainer(object):
         '''
         执行一次前向计算和一次后向计算(可能)
         '''
-        self.input_x.set_value(np.mat(data_x))
-        self.input_y.set_value(np.mat(data_y))
+        self.input_x.set_value(np.mat(data_x).T)
+        self.input_y.set_value(np.mat(data_y).T)
 
         self.optimizer.one_step()
 
@@ -73,8 +73,8 @@ class Trainer(object):
         # probs = []
         # losses = []
         for i in range(len(test_x)):
-            self.input_x.set_value(np.mat(test_x[i, :]))
-            self.input_y.set_value(np.mat(test_y[i, 0]))
+            self.input_x.set_value(np.mat(test_x[i]).T)
+            self.input_y.set_value(np.mat(test_y[i]).T)
 
             for metrics_op in self.metrics_ops:
                 metrics_op.forward()

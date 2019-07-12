@@ -8,6 +8,7 @@ Created on Wed July  9 15:13:01 2019
 import numpy as np
 
 from core import Node
+from ops import SoftMax
 
 
 class LossFunction(Node):
@@ -45,3 +46,22 @@ class LogLoss(LossFunction):
         else:
             # 默认第二个节点是label，不会参与更新，以下值无用
             return np.mat(-np.log(prob) + np.log(1 - prob))
+
+
+class CrossEntropyWithSoftMax(LossFunction):
+    """
+    对第一个父节点施加SoftMax之后，再以第二个父节点为标签One-Hot向量计算交叉熵
+    """
+
+    def compute(self):
+        prob = SoftMax.softmax(self.parents[0].value)
+        self.value = np.mat(
+            -np.sum(np.multiply(self.parents[1].value, np.log(prob + 1e-10))))
+
+    def get_jacobi(self, parent):
+        # 这里存在重复计算，但为了代码清晰简洁，舍弃进一步优化
+        prob = SoftMax.softmax(self.parents[0].value)
+        if parent is self.parents[0]:
+            return (prob - self.parents[1].value).T
+        else:
+            return (-np.log(prob)).T
