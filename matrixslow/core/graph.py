@@ -110,5 +110,14 @@ class Graph:
         # plt.savefig("computing_graph.png")  # save as png
 
 
+def get_node_from_graph(node_name, graph=None):
+    if graph is None:
+        graph = default_graph
+    for node in graph.nodes:
+        if node.name == node_name:
+            return node
+    return None
+
+
 # 全局默认计算图
 default_graph = Graph()

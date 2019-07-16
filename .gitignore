@@ -2,3 +2,4 @@ dataset
 *.pyc
 *pycache*
 *.pkl
+tmp

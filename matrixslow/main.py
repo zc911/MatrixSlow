@@ -1,9 +1,4 @@
 # -*- coding: utf-8 -*-
-from util import *
-from trainer import Trainer
-from ops.loss import LogLoss, CrossEntropyWithSoftMax
-from trainer import Trainer, Saver
-from ops.loss import LogLoss
 """
 Created on Wed July  9 15:13:01 2019
 
@@ -17,13 +12,13 @@ import numpy as np
 from sklearn.metrics import accuracy_score
 
 from core import Variable
-from core.graph import default_graph
-
+from core.graph import default_graph, get_node_from_graph
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Metrics
 from optimizer import *
-from trainer import Trainer
+from trainer import Saver, Trainer
+from util import *
 from util import ClassMining
 
 matplotlib.use('TkAgg')
@@ -153,23 +148,60 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
                           logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
 
     trainer.train(train_x, train_y, test_x, test_y)
-
-    # saver = Saver()
-    # saver.save()
+    print('---model save---')
+    for node in default_graph.nodes:
+        print(node, node.name, np.sum(node.value))
+    saver = Saver()
+    saver.save()
     # saver.load()
 
     return w, b
 
 
+def inference(test_x, test_y):
+    x, logits, w, b = build_model(FEATURE_DIM)
+
+    y = Variable((CLASSES, 1), init=False,
+                 trainable=False, name='placeholder_y')
+    loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
+    optimizer_op = optimizer.Momentum(default_graph, loss_op)
+
+    saver = Saver()
+    saver.load('./model.json', './weights.npz')
+
+    for index in range(len(test_x)):
+        features = test_x[index]
+        label_onehot = test_y[index]
+        x.set_value(np.mat(features).T)
+        y.set_value(np.mat(label_onehot).T)
+        logits.forward()
+        accuracy = get_node_from_graph('Accuracy:17')
+        accuracy.forward()
+        pred = np.argmax(logits.value)
+        gt = np.argmax(y.value)
+        if pred != gt:
+            print('prediction: {} and groudtruch: {} '.format(pred, gt))
+    print('accuracy: {}'.format(accuracy.value))
+
+
 SAMPLE_NUM = 1000
 FEATURE_DIM = 784
-TOTAL_EPOCHES = 1
-BATCH_SIZE = 32
-HIDDEN1_SIZE = 4
-HIDDEN2_SIZE = 2
+TOTAL_EPOCHES = 5
+BATCH_SIZE = 8
+HIDDEN1_SIZE = 12
+HIDDEN2_SIZE = 8
 CLASSES = 10
 if __name__ == '__main__':
+    mode = sys.argv[1]
+
     train_x, train_y, test_x, test_y = util.mnist('../MNIST/dataset')
-    w, b = train(train_x[:1000], train_y[:1000], test_x[:200],
-                 test_y[:200], TOTAL_EPOCHES, BATCH_SIZE)
+
+    if mode == 'train':
+        w, b = train(train_x, train_y, test_x,
+                     test_y, TOTAL_EPOCHES, BATCH_SIZE)
+    elif mode == 'eval':
+        inference(test_x, test_y)
+    else:
+        print('Usage: ./{} train|eval'.format(sys.argv[0]))
     # plot_data(test_x, test_y, w.value, b.value)
+    # x, logit, w1, b1 = build_model(FEATURE_DIM)

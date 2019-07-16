@@ -106,11 +106,11 @@ class Momentum(Optimizer):
     Momentum动量梯度下降
     '''
 
-    def __init__(self, graph, target, learning_rate=0.01, momentun=0.9):
+    def __init__(self, graph, target, learning_rate=0.01, momentum=0.9):
         Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
         # 动量参数，默认为0.9
-        self.momentum = momentun
+        self.momentum = momentum
 
         self.v = dict()
 

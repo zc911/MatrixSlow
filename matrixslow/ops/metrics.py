@@ -37,8 +37,8 @@ class Accuracy(Metrics):
     Accuracy算子
     '''
 
-    def __init__(self, *parents):
-        Metrics.__init__(self, *parents)
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
         self.correct_num = 0
         self.total_num = 0
 
@@ -64,8 +64,8 @@ class Precision(Metrics):
     Precision算子
     '''
 
-    def __init__(self, *parents):
-        Metrics.__init__(self, *parents)
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
         self.true_pos_num = 0
         self.pred_pos_num = 0
 
@@ -89,8 +89,8 @@ class Recall(Metrics):
     Recall算法
     '''
 
-    def __init__(self, *parents):
-        Metrics.__init__(self, *parents)
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
         self.gt_pos_num = 0
         self.true_pos_num = 0
 
@@ -115,12 +115,24 @@ class F1Score(Metrics):
 
     '''
 
-    def __init__(self, *parents):
+    def __init__(self, *parents, **kargs):
         '''
-        F1Score是一个复合算子，内部定义precision和recall算子节点
-        作为当前算子的父节点
+        F1Score是一个复合算子，内部定义precision和recall算子节点作为当前算子的父节点
+        如果输入的已经是Precision或者Recall节点，那么直接使用
         '''
-        Metrics.__init__(self, Precision(*parents), Recall(*parents))
+        precision_node = None
+        if isinstance(parents[0], Precision):
+            precision_node = parents[0]
+        else:
+            precision_node = Precision(*parents)
+
+        recall_node = None
+        if isinstance(parents[1], Recall):
+            recall_node = parents[1]
+        else:
+            recall_node = Recall(*parents)
+
+        Metrics.__init__(self, precision_node, recall_node, **kargs)
 
     def compute(self):
         '''
@@ -136,8 +148,8 @@ class F1Score(Metrics):
 
 
 class ConfusionMatrix(Metrics):
-    def __init__(self, *parents):
-        Metrics.__init__(self, *parents)
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
 
     # TODO
     def compute(self):
