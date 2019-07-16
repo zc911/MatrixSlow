@@ -15,7 +15,7 @@ from core import Variable
 from core.graph import default_graph, get_node_from_graph
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
-from ops.metrics import Metrics
+from ops.metrics import Metrics, Accuracy
 from optimizer import *
 from trainer import Saver, Trainer
 from util import *
@@ -140,7 +140,7 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
     y = Variable((CLASSES, 1), init=False,
                  trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
-    optimizer_op = optimizer.Momentum(default_graph, loss_op)
+    optimizer_op = optimizer.Adam(default_graph, loss_op)
     trainer = Trainer(x, y, logits, loss_op, optimizer_op,
                       epoches=epoches, batch_size=batch_size,
                       eval_on_train=True,
@@ -148,35 +148,62 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
                           logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
 
     trainer.train(train_x, train_y, test_x, test_y)
-    print('---model save---')
-    for node in default_graph.nodes:
-        print(node, node.name, np.sum(node.value))
-    saver = Saver()
-    saver.save()
-    # saver.load()
+
+    saver = Saver('./export')
+    saver.save(model_file_name='my_model.json',
+               weights_file_name='my_weights.npz')
 
     return w, b
 
 
-def inference(test_x, test_y):
+def inference_after_building_model(test_x, test_y):
+    # 重新构建计算图
     x, logits, w, b = build_model(FEATURE_DIM)
-
     y = Variable((CLASSES, 1), init=False,
                  trainable=False, name='placeholder_y')
-    loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
-    optimizer_op = optimizer.Momentum(default_graph, loss_op)
 
-    saver = Saver()
-    saver.load('./model.json', './weights.npz')
+    # 从文件恢复模型
+    saver = Saver('./export')
+    saver.load(model_file_name='my_model.json',
+               weights_file_name='my_weights.npz')
+
+    accuracy = Accuracy(logits, y)
 
     for index in range(len(test_x)):
         features = test_x[index]
         label_onehot = test_y[index]
         x.set_value(np.mat(features).T)
         y.set_value(np.mat(label_onehot).T)
+
         logits.forward()
-        accuracy = get_node_from_graph('Accuracy:17')
         accuracy.forward()
+
+        pred = np.argmax(logits.value)
+        gt = np.argmax(y.value)
+        if pred != gt:
+            print('prediction: {} and groudtruch: {} '.format(pred, gt))
+    print('accuracy: {}'.format(accuracy.value))
+
+
+def inference_without_building_model(test_x, test_y):
+    saver = Saver('./export')
+    saver.load(model_file_name='my_model.json',
+               weights_file_name='my_weights.npz')
+
+    x = get_node_from_graph('placeholder_x')
+    y = get_node_from_graph('placeholder_y')
+    logits = get_node_from_graph('logits')
+    accuracy = get_node_from_graph('Accuracy:17')
+
+    for index in range(len(test_x)):
+        features = test_x[index]
+        label_onehot = test_y[index]
+        x.set_value(np.mat(features).T)
+        y.set_value(np.mat(label_onehot).T)
+
+        logits.forward()
+        accuracy.forward()
+
         pred = np.argmax(logits.value)
         gt = np.argmax(y.value)
         if pred != gt:
@@ -200,7 +227,8 @@ if __name__ == '__main__':
         w, b = train(train_x, train_y, test_x,
                      test_y, TOTAL_EPOCHES, BATCH_SIZE)
     elif mode == 'eval':
-        inference(test_x, test_y)
+        # inference_after_building_model(test_x, test_y)
+        inference_without_building_model(test_x, test_y)
     else:
         print('Usage: ./{} train|eval'.format(sys.argv[0]))
     # plot_data(test_x, test_y, w.value, b.value)
