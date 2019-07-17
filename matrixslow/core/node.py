@@ -22,6 +22,7 @@ class Node(object):
                 self.__class__.__name__, default_graph.node_count())
         self.name = kargs['name']  # 节点名称
         self.need_save = kargs.get('need_save', True)
+
         self.parents = parents  # 父节点列表
         self.children = []  # 子节点列表
         self.value = None  # 本节点的值
@@ -132,7 +133,6 @@ class Variable(Node):
     def __init__(self, dim, name, init=False, trainable=True):
         """
         变量节点没有父节点，构造函数接受变量的维数，以及变量是否参与训练的标识
-        变量节点要求必须制定名称
         """
         Node.__init__(self, name=name)
         self.dim = dim
