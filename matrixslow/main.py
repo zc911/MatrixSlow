@@ -128,7 +128,7 @@ def build_metrics(logits, y, metrics_names=None):
     metrics_ops = []
     for m_name in metrics_names:
         metrics_ops.append(ClassMining.get_instance_by_subclass_name(
-            Metrics, m_name)(logits, y, need_save=True))
+            Metrics, m_name)(logits, y, need_save=False))
 
     return metrics_ops
 
@@ -233,6 +233,8 @@ if __name__ == '__main__':
     if mode == 'train':
         w, b = train(train_x, train_y, test_x,
                      test_y, TOTAL_EPOCHES, BATCH_SIZE)
+        # w, b = train(train_x[:100], train_y[:100], test_x[:100],
+        #              test_y[:100], TOTAL_EPOCHES, BATCH_SIZE)
     elif mode == 'eval':
         # inference_after_building_model(test_x, test_y)
         inference_without_building_model(test_x, test_y)

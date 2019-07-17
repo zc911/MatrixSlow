@@ -38,17 +38,17 @@ class Saver(object):
         '''
         静态工具函数，递归创建不存在的节点
         '''
-        node_type = node_json['NodeType']
-        node_name = node_json['NodeName']
-        parents_name = node_json['ParentsName']
-        shape = node_json.get('Shape', Node)
+        node_type = node_json['node_type']
+        node_name = node_json['name']
+        parents_name = node_json['parents']
+        dim = node_json.get('dim', Node)
         parents = []
         for parent_name in parents_name:
             parent_node = get_node_from_graph(parent_name, graph)
             if parent_node is None:
                 parent_node_json = None
                 for node in from_model_json:
-                    if node['NodeName'] == parent_name:
+                    if node['name'] == parent_name:
                         parent_node_json = node
 
                 assert parent_node_json is not None
@@ -59,9 +59,9 @@ class Saver(object):
             parents.append(parent_node)
         # 反射创建节点实例
         if node_type == 'Variable':
-            assert shape is not None
-            shape = tuple(shape)
-            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=shape, name=node_name)
+            assert dim is not None
+            dim = tuple(dim)
+            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=dim, name=node_name)
         else:
             return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name)
 
@@ -73,15 +73,15 @@ class Saver(object):
             if not node.need_save:
                 continue
             node_json = {
-                'NodeType': node.__class__.__name__,
-                'NodeName': node.name,
-                'ParentsName': [parent.name for parent in node.parents],
-                'ChildrenName': [child.name for child in node.children]
+                'node_type': node.__class__.__name__,
+                'name': node.name,
+                'parents': [parent.name for parent in node.parents],
+                'children': [child.name for child in node.children]
             }
-            # 保存节点的shape/dim信息
+            # 保存节点的dim信息
             if node.value is not None:
                 if isinstance(node.value, np.matrix):
-                    node_json['Shape'] = node.value.shape
+                    node_json['dim'] = node.value.shape
             model_json.append(node_json)
 
             # 如果节点是Variable类型，保存其值
@@ -104,7 +104,7 @@ class Saver(object):
     def _restore_nodes(self, graph, from_model_json, from_weights_dict):
         for index in range(len(from_model_json)):
             node_json = from_model_json[index]
-            node_name = node_json['NodeName']
+            node_name = node_json['name']
 
             weights = None
             if node_name in from_weights_dict:
@@ -115,7 +115,7 @@ class Saver(object):
             target_node = get_node_from_graph(node_name, graph)
             if target_node is None:
                 print('Target node {} of type {} not exists, try to create the instance'.format(
-                    node_json['NodeName'], node_json['NodeType']))
+                    node_json['name'], node_json['node_type']))
                 target_node = Saver.create_node(
                     graph, from_model_json, node_json)
             target_node.value = weights
