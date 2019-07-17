@@ -15,7 +15,7 @@ from core import Variable
 from core.graph import default_graph, get_node_from_graph
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
-from ops.metrics import Metrics, Accuracy
+from ops.metrics import Accuracy, Metrics
 from optimizer import *
 from trainer import Saver, Trainer
 from util import *
@@ -128,7 +128,7 @@ def build_metrics(logits, y, metrics_names=None):
     metrics_ops = []
     for m_name in metrics_names:
         metrics_ops.append(ClassMining.get_instance_by_subclass_name(
-            Metrics, m_name)(logits, y))
+            Metrics, m_name)(logits, y, need_save=True))
 
     return metrics_ops
 
@@ -157,6 +157,10 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
 
 def inference_after_building_model(test_x, test_y):
+    '''
+    提前构建计算图，再把保存的权值恢复到新构建的计算图中
+    要求构建的计算图必须与原计算图保持完全一致
+    '''
     # 重新构建计算图
     x, logits, w, b = build_model(FEATURE_DIM)
     y = Variable((CLASSES, 1), init=False,
@@ -186,6 +190,10 @@ def inference_after_building_model(test_x, test_y):
 
 
 def inference_without_building_model(test_x, test_y):
+    '''
+    不需要构建计算图，完全从保存的文件中把计算图和相应的权值恢复
+    如果要使用计算图，需要通过节点名称，调用get_node_from_graph获取相应的节点引用
+    '''
     saver = Saver('./export')
     saver.load(model_file_name='my_model.json',
                weights_file_name='my_weights.npz')
@@ -193,7 +201,7 @@ def inference_without_building_model(test_x, test_y):
     x = get_node_from_graph('placeholder_x')
     y = get_node_from_graph('placeholder_y')
     logits = get_node_from_graph('logits')
-    accuracy = get_node_from_graph('Accuracy:17')
+    accuracy = Accuracy(logits, y)
 
     for index in range(len(test_x)):
         features = test_x[index]
@@ -207,11 +215,10 @@ def inference_without_building_model(test_x, test_y):
         pred = np.argmax(logits.value)
         gt = np.argmax(y.value)
         if pred != gt:
-            print('prediction: {} and groudtruch: {} '.format(pred, gt))
+            print('False prediction: {} and groudtruch: {} '.format(pred, gt))
     print('accuracy: {}'.format(accuracy.value))
 
 
-SAMPLE_NUM = 1000
 FEATURE_DIM = 784
 TOTAL_EPOCHES = 5
 BATCH_SIZE = 8
@@ -221,7 +228,7 @@ CLASSES = 10
 if __name__ == '__main__':
     mode = sys.argv[1]
 
-    train_x, train_y, test_x, test_y = util.mnist('../MNIST/dataset')
+    train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
 
     if mode == 'train':
         w, b = train(train_x, train_y, test_x,
@@ -231,5 +238,3 @@ if __name__ == '__main__':
         inference_without_building_model(test_x, test_y)
     else:
         print('Usage: ./{} train|eval'.format(sys.argv[0]))
-    # plot_data(test_x, test_y, w.value, b.value)
-    # x, logit, w1, b1 = build_model(FEATURE_DIM)

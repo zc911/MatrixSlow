@@ -41,7 +41,7 @@ class Saver(object):
         node_type = node_json['NodeType']
         node_name = node_json['NodeName']
         parents_name = node_json['ParentsName']
-        shape = node_json['Shape']
+        shape = node_json.get('Shape', Node)
         parents = []
         for parent_name in parents_name:
             parent_node = get_node_from_graph(parent_name, graph)
@@ -58,13 +58,20 @@ class Saver(object):
 
             parents.append(parent_node)
         # 反射创建节点实例
-        return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name)
+        if node_type == 'Variable':
+            assert shape is not None
+            shape = tuple(shape)
+            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=shape, name=node_name)
+        else:
+            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name)
 
     def _save_model_and_weights(self, graph, model_file_name, weights_file_name):
         model_json = []
         weights_dict = dict()
         # 把节点元信息保存为dict/json格式
         for node in graph.nodes:
+            if not node.need_save:
+                continue
             node_json = {
                 'NodeType': node.__class__.__name__,
                 'NodeName': node.name,
@@ -103,6 +110,8 @@ class Saver(object):
             if node_name in from_weights_dict:
                 weights = from_weights_dict[node_name]
 
+            # 判断是否创建了当前节点，如果已存在，更新其权值
+            # 否则，创建节点
             target_node = get_node_from_graph(node_name, graph)
             if target_node is None:
                 print('Target node {} of type {} not exists, try to create the instance'.format(
@@ -147,4 +156,5 @@ class Saver(object):
                 weights_dict[file_name] = weights_npz_files[file_name]
             weights_npz_files.close()
         self._restore_nodes(to_graph, model_json, weights_dict)
-        print('Load and restore model from {} and {}'.format(model_file_path, weights_file_path))
+        print('Load and restore model from {} and {}'.format(
+            model_file_path, weights_file_path))

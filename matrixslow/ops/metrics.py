@@ -14,6 +14,12 @@ class Metrics(Node):
     '''
     评估指标算子抽象基类
     '''
+
+    def __init__(self, *parents, **kargs):
+        # 默认情况下，metrics节点不需要保存
+        kargs['need_save'] = kargs.get('need_save', False)
+        Node.__init__(self, *parents, **kargs)
+
     @staticmethod
     def prob_to_label(prob):
         if prob.shape[0] > 1:
@@ -124,13 +130,13 @@ class F1Score(Metrics):
         if isinstance(parents[0], Precision):
             precision_node = parents[0]
         else:
-            precision_node = Precision(*parents)
+            precision_node = Precision(*parents, **kargs)
 
         recall_node = None
         if isinstance(parents[1], Recall):
             recall_node = parents[1]
         else:
-            recall_node = Recall(*parents)
+            recall_node = Recall(*parents, **kargs)
 
         Metrics.__init__(self, precision_node, recall_node, **kargs)
 
