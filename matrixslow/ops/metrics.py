@@ -47,7 +47,6 @@ class Accuracy(Metrics):
         Metrics.__init__(self, *parents, **kargs)
         self.correct_num = 0
         self.total_num = 0
-        print(self.parents)
 
     def compute(self):
         '''
