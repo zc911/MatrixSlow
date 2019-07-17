@@ -15,7 +15,7 @@ def fill_diagonal(to_be_filled, filler):
     将 filler 矩阵填充在 to_be_filled 的对角线上
     """
     assert to_be_filled.shape[0] / \
-        filler.shape[0] == to_be_filled.shape[1] / filler.shape[1]
+           filler.shape[0] == to_be_filled.shape[1] / filler.shape[1]
     n = int(to_be_filled.shape[0] / filler.shape[0])
 
     r, c = filler.shape
@@ -68,9 +68,9 @@ class MatMul(Operator):
         else:
             jacobi = fill_diagonal(zeros, self.parents[0].value)
             row_sort = np.arange(self.dimension()).reshape(
-                self.shape()).T.ravel()
+                self.shape()[::-1]).T.ravel()
             col_sort = np.arange(parent.dimension()).reshape(
-                parent.shape()).T.ravel()
+                parent.shape()[::-1]).T.ravel()
             return jacobi[row_sort, :][:, col_sort]
 
 
