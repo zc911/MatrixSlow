@@ -1,3 +1,6 @@
 dataset
 *.pyc
 *pycache*
+*.pkl
+tmp
+export
