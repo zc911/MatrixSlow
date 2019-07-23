@@ -11,7 +11,7 @@ message Node {
 }
 
 message Gradient {
-    repeated float gradient = 1;
+    repeated float value = 1;
     repeated int32 dim = 2;
 }
 

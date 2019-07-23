@@ -9,10 +9,7 @@ sys.path.append('.')
 
 
 def client():
-    # 连接 rpc 服务器
-    channel = grpc.insecure_channel('localhost:50051')
-    # 调用 rpc 服务
-    stub = psrpc.ParameterServiceStub(channel)
+
     nodes = []
     gradients = []
     node_gradients = pspb.NodeGradients(nodes=nodes, gradients=gradients)
@@ -29,3 +26,4 @@ if __name__ == '__main__':
         ps.serve()
     else:
         client()
+    line_count = {}

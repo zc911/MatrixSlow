@@ -18,6 +18,7 @@ from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Accuracy, Metrics
 from optimizer import *
 from trainer import Saver, Trainer
+from trainer.dist_trainer import SyncTrainerParameterServer
 from util import *
 from util import ClassMining
 
@@ -141,11 +142,11 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
                  trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
-    trainer = Trainer(x, y, logits, loss_op, optimizer_op,
-                      epoches=epoches, batch_size=batch_size,
-                      eval_on_train=True,
-                      metrics_ops=build_metrics(
-                          logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
+    trainer = SyncTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
+                                         epoches=epoches, batch_size=batch_size,
+                                         eval_on_train=True,
+                                         metrics_ops=build_metrics(
+                                             logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
 
     trainer.train(train_x, train_y, test_x, test_y)
 

@@ -35,6 +35,30 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
         return pspb.ParameterPullResp(token, node_gradients)
 
 
+class ParameterServiceClient():
+    def __init__(self, ip, port):
+        # 创建stub
+        self.stub = psrpc.ParameterServiceStub(
+            grpc.insecure_channel('{}:{}'.format(ip, port)))
+
+    def push_gradients(self, acc_gradient):
+        node_gradients = pspb.NodeGradients()
+        for n, g in acc_gradient.items():
+            node = node_gradients.nodes.add()
+            node.name = n.name
+            node.node_type = n.__class__.__name__
+
+            gradient = node_gradients.gradients.add()
+            gradient.value = g.flatten().tolist()
+            gradient.dim = list(g.shape)
+        req = pspb.ParameterPushReq(token=1, node_gradients=node_gradients)
+        resp = self.stub.Push(req)
+        print(resp)
+
+    def pull_gradients(self, nodes_name):
+        pass
+
+
 def serve():
     # 启动 rpc 服务
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
