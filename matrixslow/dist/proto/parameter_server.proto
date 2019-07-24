@@ -1,3 +1,4 @@
+// python -m grpc_tools.protoc --python_out=. --grpc_python_out=. -I. parameter_server.proto
 syntax = "proto3";
 
 service ParameterService {
@@ -18,6 +19,7 @@ message Gradient {
 message NodeGradients {
     repeated Node nodes = 1;
     repeated Gradient gradients = 2;
+    int32 acc_no = 3;
 }
 
 message ParameterPushReq {

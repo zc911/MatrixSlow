@@ -24,10 +24,15 @@ class SyncTrainerParameterServer(trainer.Trainer):
                 self.one_step(train_x[i], train_y[i])
                 if i % self.batch_size == 0:
                     acc_gradient = self.optimizer.acc_gradient
-                    print(type(acc_gradient))
-                    init
-                    self.ps_client.push_gradients(acc_gradient)
-                #     self.optimizer.update()
+
+                    self.ps_client.push_gradients(
+                        acc_gradient, self.optimizer.acc_no)
+                    nodes_name = [node.name for node in acc_gradient.keys()]
+                    node_gradients_dict = self.ps_client.pull_gradients(
+                        nodes_name)
+                    self.optimizer.update(node_gradients_dict)
+                    # TODO apply the dist_gradients
+
             print('Epoch [{}] train loss: {:.4f}'.format(
                 self.epoch + 1, float(self.loss_op.value)))
 

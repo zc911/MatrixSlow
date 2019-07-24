@@ -6,6 +6,9 @@ Created on Thu Jul 18 17:14:36 CST 2019
 """
 import time
 from concurrent.futures import ThreadPoolExecutor
+import numpy as np
+import threading
+from core import Node
 
 import grpc
 from dist.proto import parameter_server_pb2 as pspb
@@ -14,25 +17,135 @@ from dist.proto import parameter_server_pb2_grpc as psrpc
 
 class ParameterServiceServer(psrpc.ParameterServiceServicer):
 
-    def Push(self, push_req, context):
-        print('Get push req', context)
+    def __init__(self):
+        self.node_gradients_cache = dict()
+        self.acc_no = 0
+        self.worker_num = 2
+        self.cur_push_num = 0
+        self.cur_pull_num = 2
+        self.cond = threading.Condition()
+        self.push_cond = threading.Condition()
+        self.pull_cond = threading.Condition()
+
+    @staticmethod
+    def _serialize_proto_node_gradients(node_gradients_dict):
+        proto_node_gradients = pspb.NodeGradients()
+        for name, g in node_gradients_dict.items():
+            proto_node = proto_node_gradients.nodes.add()
+            if isinstance(name, Node):
+                name = name.name
+            proto_node.name = name
+            proto_gradient = proto_node_gradients.gradients.add()
+
+            for v in np.array(g).flatten():
+                proto_gradient.value.append(v)
+
+            for s in list(g.shape):
+                proto_gradient.dim.append(s)
+
+        return proto_node_gradients
+
+    @staticmethod
+    def _deserialize_proto_node_gradients(node_gradients):
+        proto_nodes = node_gradients.nodes
+        proto_gradients = node_gradients.gradients
+
+        assert len(proto_nodes) == len(proto_gradients)
+
+        node_with_gradients = dict()
+
+        for index in range(len(proto_nodes)):
+            node_name = proto_nodes[index].name
+            gradients_value = proto_gradients[index].value
+            gradients_dim = tuple(proto_gradients[index].dim)
+            gradient_mat = np.mat(gradients_value, dtype=np.float32)
+            gradient_mat = np.reshape(gradient_mat, gradients_dim)
+            node_with_gradients[node_name] = gradient_mat
+        return node_with_gradients
+
+    def _deserialize_push_req(self, push_req):
         token = push_req.token
-        node_gradients = push_req.node_gradients
-        nodes = node_gradients.nodes
-        gradients = node_gradients.gradients
-        print('Workser push...')
-        print(token, nodes, gradients)
+        acc_no = push_req.node_gradients.acc_no
+        node_with_gradients = ParameterServiceServer._deserialize_proto_node_gradients(
+            push_req.node_gradients)
+
+        return node_with_gradients, acc_no
+
+    def _serialize_pull_resp(self):
+
+        proto_node_gradients = ParameterServiceServer._serialize_proto_node_gradients(
+            self.node_gradients_cache)
+        resp = pspb.ParameterPullResp(
+            token=1, node_gradients=proto_node_gradients)
+        return resp
+
+    def _update_gradients_cache(self, node_with_gradients):
+        for node_name, gradient in node_with_gradients.items():
+            if node_name in self.node_gradients_cache:
+                exists_gradient = self.node_gradients_cache[node_name]
+                assert exists_gradient.shape == gradient.shape
+                self.node_gradients_cache[node_name] = exists_gradient + gradient
+            else:
+                self.node_gradients_cache[node_name] = gradient
+
+    def _gradients_cache_mean(self):
+        if self.acc_no != 0:
+            for name, gradient in self.node_gradients_cache.items():
+                self.node_gradients_cache[name] = self.node_gradients_cache[name] / self.acc_no
+        self.acc_no = 0
+
+    def Push(self, push_req, context):
+        print('Get push req', self.cur_push_num, self.cur_pull_num, context)
+        node_with_gradients, acc_no = self._deserialize_push_req(push_req)
+
+        if self.cond.acquire():
+
+            # print('PUSH current pull num:', self.cur_pull_num)
+            while self.cur_pull_num != self.worker_num:
+                # print('PUSH wait for pull', self.cur_pull_num)
+                self.cond.wait()
+
+            self.cur_push_num += 1
+
+            # print('PUSH current push num', self.cur_push_num)
+            self._update_gradients_cache(node_with_gradients)
+            self.acc_no += acc_no
+            if self.cur_push_num >= self.worker_num:
+                # print('PUSH notify pull')
+                self.cur_pull_num = 0
+                self.cond.notify_all()
+
+            self.cond.release()
+        else:
+            self.cond.wait()
+
+        # print('PUSH Finish push req', context)
         return pspb.ParameterPushResp(token=123)
 
     def Pull(self, pull_req, context):
-        print('Get pull req', context)
-        token = pull_req.token
-        nodes = pull_req.nodes
-        gradients = []
-        print('Worker pull...')
-        print(token, nodes, gradients)
-        node_gradients = pspb.NodeGradients(nodes, gradients)
-        return pspb.ParameterPullResp(token, node_gradients)
+        print('Get pull req', self.cur_push_num, self.cur_pull_num, context)
+
+        if self.cond.acquire():
+            # print('PULL current push num', self.cur_push_num)
+            while self.cur_push_num != self.worker_num:
+                # print('PULL wait for push', self.cur_push_num)
+                self.cond.wait()
+
+            self.cur_pull_num += 1
+            self._gradients_cache_mean()
+            resp = self._serialize_pull_resp()
+            # print('PULL current pull num', self.cur_pull_num)
+            if self.cur_pull_num >= self.worker_num:
+                # print('PULL notify push')
+                self.cur_push_num = 0
+                self.cond.notify_all()
+
+            self.cond.release()
+        else:
+            self.cond.wait()
+
+        # print('PULL Finish pull req', context)
+        return resp
 
 
 class ParameterServiceClient():
@@ -41,22 +154,27 @@ class ParameterServiceClient():
         self.stub = psrpc.ParameterServiceStub(
             grpc.insecure_channel('{}:{}'.format(ip, port)))
 
-    def push_gradients(self, acc_gradient):
-        node_gradients = pspb.NodeGradients()
-        for n, g in acc_gradient.items():
-            node = node_gradients.nodes.add()
-            node.name = n.name
-            node.node_type = n.__class__.__name__
+    def push_gradients(self, acc_gradients, acc_no):
 
-            gradient = node_gradients.gradients.add()
-            gradient.value = g.flatten().tolist()
-            gradient.dim = list(g.shape)
-        req = pspb.ParameterPushReq(token=1, node_gradients=node_gradients)
-        resp = self.stub.Push(req)
-        print(resp)
+        proto_node_gradients = ParameterServiceServer._serialize_proto_node_gradients(
+            acc_gradients)
+
+        push_req = pspb.ParameterPushReq(
+            token=1, node_gradients=proto_node_gradients)
+        return self.stub.Push(push_req)
 
     def pull_gradients(self, nodes_name):
-        pass
+        pull_req = pspb.ParameterPullReq()
+
+        for node_name in nodes_name:
+            proto_node = pull_req.nodes.add()
+            proto_node.name = node_name
+        # pull_req.token = 1
+        pull_resp = self.stub.Pull(pull_req)
+        node_gradients_dict = ParameterServiceServer._deserialize_proto_node_gradients(
+            pull_resp.node_gradients)
+
+        return node_gradients_dict
 
 
 def serve():

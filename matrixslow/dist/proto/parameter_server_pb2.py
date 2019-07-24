@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x16parameter_server.proto\"\'\n\x04Node\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnode_type\x18\x02 \x01(\t\"&\n\x08Gradient\x12\r\n\x05value\x18\x01 \x03(\x02\x12\x0b\n\x03\x64im\x18\x02 \x03(\x05\"C\n\rNodeGradients\x12\x14\n\x05nodes\x18\x01 \x03(\x0b\x32\x05.Node\x12\x1c\n\tgradients\x18\x02 \x03(\x0b\x32\t.Gradient\"I\n\x10ParameterPushReq\x12\r\n\x05token\x18\x01 \x01(\x04\x12&\n\x0enode_gradients\x18\x02 \x01(\x0b\x32\x0e.NodeGradients\"\"\n\x11ParameterPushResp\x12\r\n\x05token\x18\x01 \x01(\x04\"7\n\x10ParameterPullReq\x12\r\n\x05token\x18\x01 \x01(\x04\x12\x14\n\x05nodes\x18\x02 \x03(\x0b\x32\x05.Node\"J\n\x11ParameterPullResp\x12\r\n\x05token\x18\x01 \x01(\x04\x12&\n\x0enode_gradients\x18\x02 \x01(\x0b\x32\x0e.NodeGradients2t\n\x10ParameterService\x12/\n\x04Push\x12\x11.ParameterPushReq\x1a\x12.ParameterPushResp\"\x00\x12/\n\x04Pull\x12\x11.ParameterPullReq\x1a\x12.ParameterPullResp\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\x16parameter_server.proto\"\'\n\x04Node\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnode_type\x18\x02 \x01(\t\"&\n\x08Gradient\x12\r\n\x05value\x18\x01 \x03(\x02\x12\x0b\n\x03\x64im\x18\x02 \x03(\x05\"S\n\rNodeGradients\x12\x14\n\x05nodes\x18\x01 \x03(\x0b\x32\x05.Node\x12\x1c\n\tgradients\x18\x02 \x03(\x0b\x32\t.Gradient\x12\x0e\n\x06\x61\x63\x63_no\x18\x03 \x01(\x05\"I\n\x10ParameterPushReq\x12\r\n\x05token\x18\x01 \x01(\x04\x12&\n\x0enode_gradients\x18\x02 \x01(\x0b\x32\x0e.NodeGradients\"\"\n\x11ParameterPushResp\x12\r\n\x05token\x18\x01 \x01(\x04\"7\n\x10ParameterPullReq\x12\r\n\x05token\x18\x01 \x01(\x04\x12\x14\n\x05nodes\x18\x02 \x03(\x0b\x32\x05.Node\"J\n\x11ParameterPullResp\x12\r\n\x05token\x18\x01 \x01(\x04\x12&\n\x0enode_gradients\x18\x02 \x01(\x0b\x32\x0e.NodeGradients2t\n\x10ParameterService\x12/\n\x04Push\x12\x11.ParameterPushReq\x1a\x12.ParameterPushResp\"\x00\x12/\n\x04Pull\x12\x11.ParameterPullReq\x1a\x12.ParameterPullResp\"\x00\x62\x06proto3')
 )
 
 
@@ -123,6 +123,13 @@ _NODEGRADIENTS = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='acc_no', full_name='NodeGradients.acc_no', index=2,
+      number=3, type=5, cpp_type=1, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -136,7 +143,7 @@ _NODEGRADIENTS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=107,
-  serialized_end=174,
+  serialized_end=190,
 )
 
 
@@ -173,8 +180,8 @@ _PARAMETERPUSHREQ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=176,
-  serialized_end=249,
+  serialized_start=192,
+  serialized_end=265,
 )
 
 
@@ -204,8 +211,8 @@ _PARAMETERPUSHRESP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=251,
-  serialized_end=285,
+  serialized_start=267,
+  serialized_end=301,
 )
 
 
@@ -242,8 +249,8 @@ _PARAMETERPULLREQ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=287,
-  serialized_end=342,
+  serialized_start=303,
+  serialized_end=358,
 )
 
 
@@ -280,8 +287,8 @@ _PARAMETERPULLRESP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=344,
-  serialized_end=418,
+  serialized_start=360,
+  serialized_end=434,
 )
 
 _NODEGRADIENTS.fields_by_name['nodes'].message_type = _NODE
@@ -355,8 +362,8 @@ _PARAMETERSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=420,
-  serialized_end=536,
+  serialized_start=436,
+  serialized_end=552,
   methods=[
   _descriptor.MethodDescriptor(
     name='Push',

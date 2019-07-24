@@ -232,10 +232,10 @@ if __name__ == '__main__':
     train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
 
     if mode == 'train':
-        w, b = train(train_x, train_y, test_x,
-                     test_y, TOTAL_EPOCHES, BATCH_SIZE)
-        # w, b = train(train_x[:100], train_y[:100], test_x[:100],
-        #              test_y[:100], TOTAL_EPOCHES, BATCH_SIZE)
+        # w, b = train(train_x, train_y, test_x,
+        #              test_y, TOTAL_EPOCHES, BATCH_SIZE)
+        w, b = train(train_x[:1000], train_y[:1000], test_x[:1000],
+                     test_y[:1000], TOTAL_EPOCHES, BATCH_SIZE)
     elif mode == 'eval':
         # inference_after_building_model(test_x, test_y)
         inference_without_building_model(test_x, test_y)
