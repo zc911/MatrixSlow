@@ -6,6 +6,7 @@ Created on Wed July  9 15:13:01 2019
 """
 import random
 import sys
+import argparse
 
 import matplotlib
 import numpy as np
@@ -13,6 +14,7 @@ from sklearn.metrics import accuracy_score
 
 from core import Variable
 from core.graph import default_graph, get_node_from_graph
+from dist import ps
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Accuracy, Metrics
@@ -142,9 +144,15 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
                  trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
+    # trainer = Trainer(x, y, logits, loss_op, optimizer_op,
+    #                   epoches=epoches, batch_size=batch_size,
+    #                   eval_on_train=True,
+    #                   metrics_ops=build_metrics(
+    #                       logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
+
     trainer = SyncTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
                                          epoches=epoches, batch_size=batch_size,
-                                         eval_on_train=True,
+                                         eval_on_train=True, cluster_conf=cluster_conf,
                                          metrics_ops=build_metrics(
                                              logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
 
@@ -226,18 +234,41 @@ BATCH_SIZE = 8
 HIDDEN1_SIZE = 12
 HIDDEN2_SIZE = 8
 CLASSES = 10
+
+
+cluster_conf = {
+    "ps": [
+        "k0110v.add.lycc.qihoo.net:50051"
+    ],
+    "workers": [
+        "k0110v.add.lycc.qihoo.net:2222",
+        "k0625v.add.lycc.qihoo.net:2222",
+        "k0629v.add.lycc.qihoo.net:2222"
+    ]
+}
+
 if __name__ == '__main__':
-    mode = sys.argv[1]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--role', type=str)
+    parser.add_argument('--worker_index', type=int)
+    parser.add_argument('--mode', type=str)
 
-    train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
+    args = parser.parse_args()
 
-    if mode == 'train':
-        # w, b = train(train_x, train_y, test_x,
-        #              test_y, TOTAL_EPOCHES, BATCH_SIZE)
-        w, b = train(train_x[:1000], train_y[:1000], test_x[:1000],
-                     test_y[:1000], TOTAL_EPOCHES, BATCH_SIZE)
-    elif mode == 'eval':
-        # inference_after_building_model(test_x, test_y)
-        inference_without_building_model(test_x, test_y)
+    role = args.role
+    if role == 'ps':
+        ps_host = cluster_conf['ps'][0]
+        ps.serve(ps_host, len(cluster_conf['workers']))
     else:
-        print('Usage: ./{} train|eval'.format(sys.argv[0]))
+        train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
+        mode = args.mode
+        if mode == 'train':
+            w, b = train(train_x, train_y, test_x,
+                         test_y, TOTAL_EPOCHES, BATCH_SIZE)
+            # w, b = train(train_x[:1000], train_y[:1000], test_x[:200],
+            #              test_y[:200], TOTAL_EPOCHES, BATCH_SIZE)
+        elif mode == 'eval':
+            # inference_after_building_model(test_x, test_y)
+            inference_without_building_model(test_x, test_y)
+        else:
+            print('Usage: ./{} train|eval'.format(sys.argv[0]))

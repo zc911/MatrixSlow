@@ -6,6 +6,7 @@ Created on Wed Jul 10 15:19:42 CST 2019
 @author: chenzhen
 """
 import numpy as np
+import abc
 
 
 class Trainer(object):
@@ -16,7 +17,7 @@ class Trainer(object):
     def __init__(self, input_x, input_y, logits,
                  loss_op, optimizer,
                  epoches, batch_size=8,
-                 eval_on_train=False, metrics_ops=None):
+                 eval_on_train=False, metrics_ops=None, *args, **kargs):
         self.input_x = input_x
         self.input_y = input_y
         self.logits = logits
@@ -28,6 +29,9 @@ class Trainer(object):
         self.batch_size = batch_size
         self.eval_on_train = eval_on_train
         self.metrics_ops = metrics_ops
+
+        self.print_iteration_interval = kargs.get(
+            'print_iteration_interval', 1000)
 
     def one_step(self, data_x, data_y):
         '''
@@ -57,17 +61,26 @@ class Trainer(object):
             metrics_str += metrics_op.value_str()
         print(metrics_str)
 
+    @abc.abstractmethod
+    def _optimizer_update(self):
+        raise NotImplementedError()
+
     def main_loop(self, train_x, train_y, test_x, test_y):
         '''
         训练（验证）的主循环
         '''
         for self.epoch in range(self.epoches):
+            print('Epoch [{}] train start...'.format(self.epoch + 1))
 
-            # TODO improve the batch mechanism
             for i in range(len(train_x)):
                 self.one_step(train_x[i], train_y[i])
-                if i % self.batch_size == 0:
-                    self.optimizer.update()
+                if i % self.batch_size == 1:
+                    self._optimizer_update()
+
+                if i % self.print_iteration_interval == 1:
+                    print('Epoch [{}] iteration [{}] training and loss value: {:.4f}'.format(
+                        self.epoch + 1, i, self.loss_op.value))
+
             print('Epoch [{}] train loss: {:.4f}'.format(
                 self.epoch + 1, float(self.loss_op.value)))
 

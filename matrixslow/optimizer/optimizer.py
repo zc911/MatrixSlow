@@ -54,6 +54,7 @@ class Optimizer(object):
             else:
                 target_node = get_node_from_graph(node)
                 assert target_node is not None
+                assert self.acc_gradient[target_node].shape == gradient.shape
                 self.acc_gradient[target_node] = gradient
                 self.acc_no = 1
 

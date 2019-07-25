@@ -11,30 +11,15 @@ from dist import ps
 class SyncTrainerParameterServer(trainer.Trainer):
     def __init__(self, *args, **kargs):
         trainer.Trainer.__init__(self, *args, **kargs)
-        self.ps_client = ps.ParameterServiceClient(ip='localhost', port=50051)
+        cluster_conf = kargs['cluster_conf']
+        ps_host = cluster_conf['ps'][0]
+        self.ps_client = ps.ParameterServiceClient(ps_host)
 
-    def main_loop(self, train_x, train_y, test_x, test_y):
-        '''
-        训练（验证）的主循环
-        '''
-        for self.epoch in range(self.epoches):
-
-            # TODO improve the batch mechanism
-            for i in range(len(train_x)):
-                self.one_step(train_x[i], train_y[i])
-                if i % self.batch_size == 0:
-                    acc_gradient = self.optimizer.acc_gradient
-
-                    self.ps_client.push_gradients(
-                        acc_gradient, self.optimizer.acc_no)
-                    nodes_name = [node.name for node in acc_gradient.keys()]
-                    node_gradients_dict = self.ps_client.pull_gradients(
-                        nodes_name)
-                    self.optimizer.update(node_gradients_dict)
-                    # TODO apply the dist_gradients
-
-            print('Epoch [{}] train loss: {:.4f}'.format(
-                self.epoch + 1, float(self.loss_op.value)))
-
-            if self.eval_on_train and test_x is not None and test_y is not None:
-                self.eval(test_x, test_y)
+    def _optimizer_update(self):
+        acc_gradient = self.optimizer.acc_gradient
+        self.ps_client.push_gradients(
+            acc_gradient, self.optimizer.acc_no)
+        nodes_name = [node.name for node in acc_gradient.keys()]
+        node_gradients_dict = self.ps_client.pull_gradients(
+            nodes_name)
+        self.optimizer.update(node_gradients_dict)

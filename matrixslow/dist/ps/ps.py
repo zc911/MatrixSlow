@@ -17,15 +17,13 @@ from dist.proto import parameter_server_pb2_grpc as psrpc
 
 class ParameterServiceServer(psrpc.ParameterServiceServicer):
 
-    def __init__(self):
+    def __init__(self, worker_num):
         self.node_gradients_cache = dict()
-        self.acc_no = 0
-        self.worker_num = 2
+        self.worker_num = worker_num
         self.cur_push_num = 0
-        self.cur_pull_num = 2
+        self.cur_pull_num = self.worker_num
         self.cond = threading.Condition()
-        self.push_cond = threading.Condition()
-        self.pull_cond = threading.Condition()
+        self.acc_no = 0
 
     @staticmethod
     def _serialize_proto_node_gradients(node_gradients_dict):
@@ -89,6 +87,7 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
                 self.node_gradients_cache[node_name] = gradient
 
     def _gradients_cache_mean(self):
+
         if self.acc_no != 0:
             for name, gradient in self.node_gradients_cache.items():
                 self.node_gradients_cache[name] = self.node_gradients_cache[name] / self.acc_no
@@ -149,15 +148,16 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
 
 
 class ParameterServiceClient():
-    def __init__(self, ip, port):
+    def __init__(self, ps_host):
         # 创建stub
         self.stub = psrpc.ParameterServiceStub(
-            grpc.insecure_channel('{}:{}'.format(ip, port)))
+            grpc.insecure_channel(ps_host))
 
     def push_gradients(self, acc_gradients, acc_no):
 
         proto_node_gradients = ParameterServiceServer._serialize_proto_node_gradients(
             acc_gradients)
+        proto_node_gradients.acc_no = acc_no
 
         push_req = pspb.ParameterPushReq(
             token=1, node_gradients=proto_node_gradients)
@@ -177,13 +177,13 @@ class ParameterServiceClient():
         return node_gradients_dict
 
 
-def serve():
+def serve(host, worker_num):
     # 启动 rpc 服务
     server = grpc.server(ThreadPoolExecutor(max_workers=10))
     psrpc.add_ParameterServiceServicer_to_server(
-        ParameterServiceServer(), server)
-    print('Parameter server running on [::]:50051')
-    server.add_insecure_port('[::]:50051')
+        ParameterServiceServer(worker_num), server)
+    print('Parameter server running on {} and worker num {}'.format(host, worker_num))
+    server.add_insecure_port(host)
     server.start()
     try:
         while True:
