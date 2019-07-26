@@ -4,21 +4,23 @@ Created on Wed July  9 15:13:01 2019
 
 @author: chenzhen
 """
+import sys
 import argparse
 import random
+import time
 
 import matplotlib
 import numpy as np
 from sklearn.metrics import accuracy_score
 
+import matrixslow as ms
 from core.graph import default_graph
 from dist import ps
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Accuracy, Metrics
 from optimizer import *
-from trainer import Saver, Trainer
-from trainer.dist_trainer import SyncTrainerParameterServer
+from trainer import Saver, SimpleTrainer, SyncTrainerParameterServer
 from util import *
 from util import ClassMining
 
@@ -138,7 +140,7 @@ def build_metrics(logits, y, metrics_names=None):
     return metrics_ops
 
 
-def train(train_x, train_y, test_x, test_y, epoches, batch_size):
+def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
 
     x, logits, w, b = build_model(FEATURE_DIM)
 
@@ -146,17 +148,19 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
                     trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
-    # trainer = Trainer(x, y, logits, loss_op, optimizer_op,
-    #                   epoches=epoches, batch_size=batch_size,
-    #                   eval_on_train=True,
-    #                   metrics_ops=build_metrics(
-    #                       logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
+    if mode == 'local':
+        trainer = SimpleTrainer(x, y, logits, loss_op, optimizer_op,
+                                epoches=epoches, batch_size=batch_size,
+                                eval_on_train=True,
+                                metrics_ops=build_metrics(
+                                    logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
+    else:
 
-    trainer = SyncTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
-                                         epoches=epoches, batch_size=batch_size,
-                                         eval_on_train=True, cluster_conf=cluster_conf,
-                                         metrics_ops=build_metrics(
-                                             logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
+        trainer = SyncTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
+                                             epoches=epoches, batch_size=batch_size,
+                                             eval_on_train=True, cluster_conf=cluster_conf,
+                                             metrics_ops=build_metrics(
+                                                 logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
 
     trainer.train(train_x, train_y, test_x, test_y)
 
@@ -240,20 +244,20 @@ CLASSES = 10
 
 cluster_conf = {
     "ps": [
-        "k0110v.add.lycc.qihoo.net:50051"
+        "k0625v.add.lycc.qihoo.net:5000"
     ],
     "workers": [
-        "k0110v.add.lycc.qihoo.net:2222",
-        "k0625v.add.lycc.qihoo.net:2222",
-        "k0629v.add.lycc.qihoo.net:2222"
+        "k0110v.add.lycc.qihoo.net:5000",
+        "k0629v.add.lycc.qihoo.net:5000"
     ]
 }
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--mode', type=str)
     parser.add_argument('--role', type=str)
     parser.add_argument('--worker_index', type=int)
-    parser.add_argument('--mode', type=str)
+    parser.add_argument('--phase', type=str)
 
     args = parser.parse_args()
 
@@ -262,15 +266,20 @@ if __name__ == '__main__':
         ps_host = cluster_conf['ps'][0]
         ps.serve(ps_host, len(cluster_conf['workers']))
 
- else:
+    else:
         train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
         mode = args.mode
-        if mode == 'train':
-            w, b = train(train_x, train_y, test_x,
-                         test_y, TOTAL_EPOCHES, BATCH_SIZE)
-            # w, b = train(train_x[:1000], train_y[:1000], test_x[:200],
-            #              test_y[:200], TOTAL_EPOCHES, BATCH_SIZE)
-        elif mode == 'eval':
+        phase = args.phase
+        if phase == 'train':
+            start = time.time()
+            w, b = train(train_x[:15000], train_y[:15000], test_x[:200],
+                         test_y[:200], TOTAL_EPOCHES, BATCH_SIZE, mode)
+            # w, b = train(train_x, train_y, test_x,
+            #              test_y, TOTAL_EPOCHES, BATCH_SIZE)
+            end = time.time()
+            print('Train time cost: ', end-start)
+
+        elif phase == 'eval':
             # inference_after_building_model(test_x, test_y)
             inference_without_building_model(test_x, test_y)
         else:

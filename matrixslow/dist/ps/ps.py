@@ -94,7 +94,7 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
         self.acc_no = 0
 
     def Push(self, push_req, context):
-        print('Get push req', self.cur_push_num, self.cur_pull_num, context)
+        # print('Get push req', self.cur_push_num, self.cur_pull_num, context)
         node_with_gradients, acc_no = self._deserialize_push_req(push_req)
 
         if self.cond.acquire():
@@ -122,7 +122,7 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
         return pspb.ParameterPushResp(token=123)
 
     def Pull(self, pull_req, context):
-        print('Get pull req', self.cur_push_num, self.cur_pull_num, context)
+        # print('Get pull req', self.cur_push_num, self.cur_pull_num, context)
 
         if self.cond.acquire():
             # print('PULL current push num', self.cur_push_num)

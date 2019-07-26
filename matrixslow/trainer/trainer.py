@@ -5,8 +5,10 @@ Created on Wed Jul 10 15:19:42 CST 2019
 
 @author: chenzhen
 """
-import numpy as np
+import time
 import abc
+
+import numpy as np
 
 
 class Trainer(object):
@@ -71,18 +73,19 @@ class Trainer(object):
         '''
         for self.epoch in range(self.epoches):
             print('Epoch [{}] train start...'.format(self.epoch + 1))
-
+            start_time = time.time()
             for i in range(len(train_x)):
                 self.one_step(train_x[i], train_y[i])
+
+                if i % self.print_iteration_interval == 1:
+                    print('Epoch [{}] iteration [{}] train finished and loss value: {:4f}'.format(
+                        self.epoch + 1, i, float(self.loss_op.value)))
+
                 if i % self.batch_size == 1:
                     self._optimizer_update()
 
-                if i % self.print_iteration_interval == 1:
-                    print('Epoch [{}] iteration [{}] training and loss value: {:.4f}'.format(
-                        self.epoch + 1, i, self.loss_op.value))
-
-            print('Epoch [{}] train loss: {:.4f}'.format(
-                self.epoch + 1, float(self.loss_op.value)))
+            print('Epoch [{}] train finished, time cost: {} and loss: {:.4f}'.format(
+                self.epoch + 1, time.time() - start_time, float(self.loss_op.value)))
 
             if self.eval_on_train and test_x is not None and test_y is not None:
                 self.eval(test_x, test_y)
