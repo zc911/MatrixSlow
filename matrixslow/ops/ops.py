@@ -121,3 +121,39 @@ class SoftMax(Operator):
         我们不实现SoftMax节点的get_jacobi函数，训练时使用CrossEntropyWithSoftMax节点（见下）
         """
         return np.mat(np.eye(self.dimension()))  # 无用
+
+
+class Reshape(Operator):
+    """
+    改变父节点的值（矩阵）的形状
+    """
+
+    def __init__(self, parent, shape):
+        Operator.__init__(self, parent)
+
+        assert isinstance(shape, tuple) and len(shape) == 2
+        self.to_shape = shape
+
+    def compute(self):
+        self.value = self.parents[0].value.reshape(self.to_shape)
+
+    def get_jacobi(self, parent):
+
+        assert parent is self.parents[0]
+        return np.mat(np.eye(self.dimension()))
+
+
+class Multiply(Operator):
+    """
+    两个父节点的值是相同形状的矩阵，将它们对应位置的值相乘
+    """
+
+    def compute(self):
+        self.value = np.multiply(self.parents[0].value, self.parents[1].value)
+
+    def get_jacobi(self, parent):
+
+        if parent is self.parents[0]:
+            return np.diag(self.parents[1].value.A1)
+        else:
+            return np.diag(self.parents[0].value.A1)
