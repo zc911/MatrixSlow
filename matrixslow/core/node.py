@@ -17,10 +17,11 @@ class Node(object):
     """
 
     def __init__(self, *parents, **kargs):
-        if 'name' not in kargs:
-            kargs['name'] = '{}:{}'.format(
-                self.__class__.__name__, default_graph.node_count())
-        self.name = kargs['name']  # 节点名称
+        self.name = kargs.get('name', '{}:{}'.format(
+            self.__class__.__name__, default_graph.node_count()))
+        if default_graph.name_scope:
+            self.name = '{}/{}'.format(default_graph.name_scope, self.name)
+
         self.need_save = kargs.get('need_save', True)
 
         self.parents = parents  # 父节点列表

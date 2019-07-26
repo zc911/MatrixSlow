@@ -10,9 +10,10 @@ import os
 
 import numpy as np
 
+import matrixslow as ms
 from core import *
 from core import Node, Variable
-from core.graph import default_graph, get_node_from_graph
+from core.graph import default_graph
 from ops import *
 from ops.loss import *
 from ops.metrics import *
@@ -44,7 +45,7 @@ class Saver(object):
         dim = node_json.get('dim', Node)
         parents = []
         for parent_name in parents_name:
-            parent_node = get_node_from_graph(parent_name, graph)
+            parent_node = ms.get_node_from_graph(parent_name, graph=graph)
             if parent_node is None:
                 parent_node_json = None
                 for node in from_model_json:
@@ -112,7 +113,7 @@ class Saver(object):
 
             # 判断是否创建了当前节点，如果已存在，更新其权值
             # 否则，创建节点
-            target_node = get_node_from_graph(node_name, graph)
+            target_node = ms.get_node_from_graph(node_name, graph=graph)
             if target_node is None:
                 print('Target node {} of type {} not exists, try to create the instance'.format(
                     node_json['name'], node_json['node_type']))
