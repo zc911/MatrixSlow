@@ -8,6 +8,7 @@ Created on Wed Jul 10 17:34:46 CST 2019
 import numpy as np
 
 from core import Node
+import matrixslow as ms
 
 
 class Metrics(Node):
@@ -130,13 +131,15 @@ class F1Score(Metrics):
         if isinstance(parents[0], Precision):
             precision_node = parents[0]
         else:
-            precision_node = Precision(*parents, **kargs)
+            with ms.name_scope('F1Score'):
+                precision_node = Precision(*parents, **kargs)
 
         recall_node = None
         if isinstance(parents[1], Recall):
             recall_node = parents[1]
         else:
-            recall_node = Recall(*parents, **kargs)
+            with ms.name_scope('F1Score'):
+                recall_node = Recall(*parents, **kargs)
 
         Metrics.__init__(self, precision_node, recall_node, **kargs)
 

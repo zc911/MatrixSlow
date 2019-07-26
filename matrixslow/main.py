@@ -4,16 +4,14 @@ Created on Wed July  9 15:13:01 2019
 
 @author: chenzhen
 """
-import random
-import sys
 import argparse
+import random
 
 import matplotlib
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-from core import Variable
-from core.graph import default_graph, get_node_from_graph
+from core.graph import default_graph
 from dist import ps
 from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
@@ -105,24 +103,28 @@ def build_model(feature_num):
     '''
     构建DNN计算图网络
     '''
-    x = Variable((feature_num, 1), init=False,
-                 trainable=False, name='placeholder_x')
-    w1 = Variable((HIDDEN1_SIZE, feature_num), init=True,
-                  trainable=True, name='weights_w1')
-    b1 = Variable((HIDDEN1_SIZE, 1), init=True,
-                  trainable=True, name='bias_b1')
-    w2 = Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True,
-                  trainable=True, name='weights_w2')
-    b2 = Variable((HIDDEN2_SIZE, 1), init=True,
-                  trainable=True, name='bias_b2')
-    w3 = Variable((CLASSES, HIDDEN2_SIZE), init=True,
-                  trainable=True, name='weights_w3')
-    b3 = Variable((CLASSES, 1), init=True,
-                  trainable=True, name='bias_b3')
+    with ms.name_scope('Variable'):
+        x = ms.Variable((feature_num, 1), init=False,
+                        trainable=False, name='placeholder_x')
+        w1 = ms.Variable((HIDDEN1_SIZE, feature_num), init=True,
+                         trainable=True, name='weights_w1')
+        b1 = ms.Variable((HIDDEN1_SIZE, 1), init=True,
+                         trainable=True, name='bias_b1')
+        w2 = ms.Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True,
+                         trainable=True, name='weights_w2')
+        b2 = ms.Variable((HIDDEN2_SIZE, 1), init=True,
+                         trainable=True, name='bias_b2')
+        w3 = ms.Variable((CLASSES, HIDDEN2_SIZE), init=True,
+                         trainable=True, name='weights_w3')
+        b3 = ms.Variable((CLASSES, 1), init=True,
+                         trainable=True, name='bias_b3')
 
-    hidden1 = ReLU(Add(MatMul(w1, x), b1), name='hidden1')
-    hidden2 = ReLU(Add(MatMul(w2, hidden1), b2), name='hidden2')
-    logit = Add(MatMul(w3, hidden2), b3, name='logits')
+    with ms.name_scope('Hidden'):
+        hidden1 = ReLU(Add(MatMul(w1, x), b1), name='hidden1')
+        hidden2 = ReLU(Add(MatMul(w2, hidden1), b2), name='hidden2')
+
+    with ms.name_scope('Logits'):
+        logit = Add(MatMul(w3, hidden2), b3, name='logits')
 
     return x, logit, w1, b1
 
@@ -131,7 +133,7 @@ def build_metrics(logits, y, metrics_names=None):
     metrics_ops = []
     for m_name in metrics_names:
         metrics_ops.append(ClassMining.get_instance_by_subclass_name(
-            Metrics, m_name)(logits, y, need_save=False))
+            Metrics, m_name)(logits, y, need_save=True))
 
     return metrics_ops
 
@@ -140,8 +142,8 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size):
 
     x, logits, w, b = build_model(FEATURE_DIM)
 
-    y = Variable((CLASSES, 1), init=False,
-                 trainable=False, name='placeholder_y')
+    y = ms.Variable((CLASSES, 1), init=False,
+                    trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
     # trainer = Trainer(x, y, logits, loss_op, optimizer_op,
@@ -172,8 +174,8 @@ def inference_after_building_model(test_x, test_y):
     '''
     # 重新构建计算图
     x, logits, w, b = build_model(FEATURE_DIM)
-    y = Variable((CLASSES, 1), init=False,
-                 trainable=False, name='placeholder_y')
+    y = ms.Variable((CLASSES, 1), init=False,
+                    trainable=False, name='placeholder_y')
 
     # 从文件恢复模型
     saver = Saver('./export')
@@ -207,9 +209,9 @@ def inference_without_building_model(test_x, test_y):
     saver.load(model_file_name='my_model.json',
                weights_file_name='my_weights.npz')
 
-    x = get_node_from_graph('placeholder_x')
-    y = get_node_from_graph('placeholder_y')
-    logits = get_node_from_graph('logits')
+    x = ms.get_node_from_graph('Variable/placeholder_x')
+    y = ms.get_node_from_graph('placeholder_y')
+    logits = ms.get_node_from_graph('logits', name_scope='Logits')
     accuracy = Accuracy(logits, y)
 
     for index in range(len(test_x)):
@@ -259,7 +261,8 @@ if __name__ == '__main__':
     if role == 'ps':
         ps_host = cluster_conf['ps'][0]
         ps.serve(ps_host, len(cluster_conf['workers']))
-    else:
+
+ else:
         train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
         mode = args.mode
         if mode == 'train':
