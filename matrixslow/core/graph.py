@@ -13,6 +13,7 @@ class Graph:
 
     def __init__(self):
         self.nodes = []  # 计算图内的节点的列表
+        self.name_scope = None
 
     def add_node(self, node):
         """
@@ -108,16 +109,6 @@ class Graph:
 
         # 保存图像
         # plt.savefig("computing_graph.png")  # save as png
-
-
-def get_node_from_graph(node_name, graph=None):
-    if graph is None:
-        graph = default_graph
-    for node in graph.nodes:
-        if node.name == node_name:
-            return node
-    return None
-
 
 # 全局默认计算图
 default_graph = Graph()
