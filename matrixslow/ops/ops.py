@@ -138,7 +138,6 @@ class Reshape(Operator):
         self.value = self.parents[0].value.reshape(self.to_shape)
 
     def get_jacobi(self, parent):
-
         assert parent is self.parents[0]
         return np.mat(np.eye(self.dimension()))
 
@@ -163,6 +162,7 @@ class Convolve(Operator):
     """
     以第二个父节点的值为卷积核，对第一个父节点的值做二维离散卷积
     """
+
     def __init__(self, *parents):
         assert len(parents) == 2
         Operator.__init__(self, *parents)
@@ -209,7 +209,7 @@ class Convolve(Operator):
                 for j in np.arange(hkh, hkh + h):
                     mask = np.mat(np.zeros((pw, ph)))
                     mask[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh] = kernel
-                    jacobi.append(mask[hkw:hkw+w, hkh:hkh+h].A1)
+                    jacobi.append(mask[hkw:hkw + w, hkh:hkh + h].A1)
         elif parent is self.parents[1]:
             for i in np.arange(hkw, hkw + w):
                 for j in np.arange(hkh, hkh + h):
@@ -224,6 +224,7 @@ class MaxPooling(Operator):
     """
     最大值池化
     """
+
     def __init__(self, parent, size, stride):
         Operator.__init__(self, parent)
 
@@ -249,7 +250,6 @@ class MaxPooling(Operator):
         for i in np.arange(0, w, sw):
             row = []
             for j in np.arange(0, h, sh):
-
                 # 取池化窗口中的最大值
                 top, bottom = max(0, i - hkw), min(w, i + hkw + 1)
                 left, right = max(0, j - hkh), min(h, j + hkh + 1)
@@ -284,7 +284,6 @@ class Flatten(Operator):
     """
 
     def compute(self):
-
         assert len(self.parents) > 0
 
         # 将所有负矩阵展平并连接成一个向量
@@ -294,7 +293,6 @@ class Flatten(Operator):
         ).T
 
     def get_jacobi(self, parent):
-
         assert parent in self.parents
 
         dimensions = [p.dimension() for p in self.parents]  # 各个父节点的元素数量
