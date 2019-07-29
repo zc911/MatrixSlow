@@ -1,0 +1,42 @@
+// python -m grpc_tools.protoc --python_out=. --grpc_python_out=. -I. parameter_server.proto
+syntax = "proto3";
+
+service ParameterService {
+    rpc Push(ParameterPushReq) returns (ParameterPushResp) {}
+    rpc Pull(ParameterPullReq) returns (ParameterPullResp) {}
+}
+
+message Node {
+    string name = 1;
+    string node_type = 2;
+}
+
+message Gradient {
+    repeated float value = 1;
+    repeated int32 dim = 2;
+}
+
+message NodeGradients {
+    repeated Node nodes = 1;
+    repeated Gradient gradients = 2;
+    int32 acc_no = 3;
+}
+
+message ParameterPushReq {
+    uint64 token = 1;
+    NodeGradients node_gradients = 2;
+}
+
+message ParameterPushResp {
+    uint64 token = 1;
+}
+
+message ParameterPullReq {
+    uint64 token = 1;
+    repeated Node nodes = 2;
+}
+
+message ParameterPullResp {
+    uint64 token = 1;
+    NodeGradients node_gradients = 2;
+}

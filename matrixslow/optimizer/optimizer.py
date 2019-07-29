@@ -8,9 +8,8 @@ import abc
 
 import numpy as np
 
-from core import Node, Variable
+from core import Node, Variable, get_node_from_graph
 from core.graph import Graph
-
 
 class Optimizer(object):
     """
@@ -47,10 +46,20 @@ class Optimizer(object):
         抽象方法，执行具体的梯度更新算法，由子类实现
         '''
 
+    def _apply_gradients(self, node_gradients_dict):
+        for node, gradient in node_gradients_dict.items():
+            if isinstance(node, Node):
+                pass
+            else:
+                target_node = get_node_from_graph(node)
+                assert target_node is not None
+                assert self.acc_gradient[target_node].shape == gradient.shape
+                self.acc_gradient[target_node] = gradient
+                self.acc_no = 1
+
     def update(self, var_gradients=None):
         if var_gradients is not None:
-            # TODO update current gradients acc from
-            pass
+            self._apply_gradients(var_gradients)
         self._update()
         # 清除累计梯度
         self.acc_gradient.clear()
