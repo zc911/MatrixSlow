@@ -28,6 +28,9 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
     @staticmethod
     def _serialize_proto_node_gradients(node_gradients_dict):
         proto_node_gradients = pspb.NodeGradients()
+        proto_gradient_total_cost = 0
+        proto_gradient_total_cost2 = 0
+        proto_gradient_dim_total_cost = 0
         for name, g in node_gradients_dict.items():
             proto_node = proto_node_gradients.nodes.add()
             if isinstance(name, Node):
@@ -35,11 +38,8 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
             proto_node.name = name
             proto_gradient = proto_node_gradients.gradients.add()
 
-            for v in np.array(g).flatten():
-                proto_gradient.value.append(v)
-
-            for s in list(g.shape):
-                proto_gradient.dim.append(s)
+            proto_gradient.value.extend(np.array(g).flatten())
+            proto_gradient.dim.extend(list(g.shape))
 
         return proto_node_gradients
 
@@ -96,54 +96,40 @@ class ParameterServiceServer(psrpc.ParameterServiceServicer):
     def Push(self, push_req, context):
         # print('Get push req', self.cur_push_num, self.cur_pull_num, context)
         node_with_gradients, acc_no = self._deserialize_push_req(push_req)
-
+        start = time.time()
         if self.cond.acquire():
 
-            # print('PUSH current pull num:', self.cur_pull_num)
             while self.cur_pull_num != self.worker_num:
-                # print('PUSH wait for pull', self.cur_pull_num)
                 self.cond.wait()
 
             self.cur_push_num += 1
 
-            # print('PUSH current push num', self.cur_push_num)
             self._update_gradients_cache(node_with_gradients)
             self.acc_no += acc_no
             if self.cur_push_num >= self.worker_num:
-                # print('PUSH notify pull')
                 self.cur_pull_num = 0
                 self.cond.notify_all()
 
             self.cond.release()
         else:
             self.cond.wait()
-
-        # print('PUSH Finish push req', context)
         return pspb.ParameterPushResp(token=123)
 
     def Pull(self, pull_req, context):
-        # print('Get pull req', self.cur_push_num, self.cur_pull_num, context)
-
         if self.cond.acquire():
-            # print('PULL current push num', self.cur_push_num)
             while self.cur_push_num != self.worker_num:
-                # print('PULL wait for push', self.cur_push_num)
                 self.cond.wait()
 
             self.cur_pull_num += 1
             self._gradients_cache_mean()
             resp = self._serialize_pull_resp()
-            # print('PULL current pull num', self.cur_pull_num)
             if self.cur_pull_num >= self.worker_num:
-                # print('PULL notify push')
                 self.cur_push_num = 0
                 self.cond.notify_all()
 
             self.cond.release()
         else:
             self.cond.wait()
-
-        # print('PULL Finish pull req', context)
         return resp
 
 
@@ -154,14 +140,14 @@ class ParameterServiceClient():
             grpc.insecure_channel(ps_host))
 
     def push_gradients(self, acc_gradients, acc_no):
-
         proto_node_gradients = ParameterServiceServer._serialize_proto_node_gradients(
             acc_gradients)
         proto_node_gradients.acc_no = acc_no
-
         push_req = pspb.ParameterPushReq(
             token=1, node_gradients=proto_node_gradients)
-        return self.stub.Push(push_req)
+
+        resp = self.stub.Push(push_req)
+        return resp
 
     def pull_gradients(self, nodes_name):
         pull_req = pspb.ParameterPullReq()
@@ -169,11 +155,10 @@ class ParameterServiceClient():
         for node_name in nodes_name:
             proto_node = pull_req.nodes.add()
             proto_node.name = node_name
-        # pull_req.token = 1
+
         pull_resp = self.stub.Pull(pull_req)
         node_gradients_dict = ParameterServiceServer._deserialize_proto_node_gradients(
             pull_resp.node_gradients)
-
         return node_gradients_dict
 
 

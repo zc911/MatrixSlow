@@ -4,8 +4,10 @@ Created on Thu Jul 18 20:48:16 CST 2019
 
 @author: chenzhen
 """
-from . import trainer
+
 from dist import ps
+
+from . import trainer
 
 
 class SyncTrainerParameterServer(trainer.Trainer):
@@ -17,8 +19,10 @@ class SyncTrainerParameterServer(trainer.Trainer):
 
     def _optimizer_update(self):
         acc_gradient = self.optimizer.acc_gradient
+
         self.ps_client.push_gradients(
             acc_gradient, self.optimizer.acc_no)
+
         nodes_name = [node.name for node in acc_gradient.keys()]
         node_gradients_dict = self.ps_client.pull_gradients(
             nodes_name)
