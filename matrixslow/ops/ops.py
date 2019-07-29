@@ -32,15 +32,17 @@ class Operator(Node):
     pass
 
 
-class Add(Operator):
+class Add(Node):
     """
-    矩阵加法
+    （多个）矩阵加法
     """
 
     def compute(self):
-        assert len(self.parents) == 2 and self.parents[0].shape(
-        ) == self.parents[1].shape()
-        self.value = self.parents[0].value + self.parents[1].value
+        # assert len(self.parents) == 2 and self.parents[0].shape() == self.parents[1].shape()
+        self.value = np.mat(np.zeros(self.parents[0].shape()))
+
+        for parent in self.parents:
+            self.value += parent.value
 
     def get_jacobi(self, parent):
         return np.mat(np.eye(self.dimension()))  # 矩阵之和对其中任一个矩阵的雅可比矩阵是单位矩阵
