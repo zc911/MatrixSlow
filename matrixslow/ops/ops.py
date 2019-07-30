@@ -32,15 +32,17 @@ class Operator(Node):
     pass
 
 
-class Add(Operator):
+class Add(Node):
     """
-    矩阵加法
+    （多个）矩阵加法
     """
 
     def compute(self):
-        assert len(self.parents) == 2 and self.parents[0].shape(
-        ) == self.parents[1].shape()
-        self.value = self.parents[0].value + self.parents[1].value
+        # assert len(self.parents) == 2 and self.parents[0].shape() == self.parents[1].shape()
+        self.value = np.mat(np.zeros(self.parents[0].shape()))
+
+        for parent in self.parents:
+            self.value += parent.value
 
     def get_jacobi(self, parent):
         return np.mat(np.eye(self.dimension()))  # 矩阵之和对其中任一个矩阵的雅可比矩阵是单位矩阵
@@ -138,7 +140,6 @@ class Reshape(Operator):
         self.value = self.parents[0].value.reshape(self.to_shape)
 
     def get_jacobi(self, parent):
-
         assert parent is self.parents[0]
         return np.mat(np.eye(self.dimension()))
 
@@ -157,3 +158,153 @@ class Multiply(Operator):
             return np.diag(self.parents[1].value.A1)
         else:
             return np.diag(self.parents[0].value.A1)
+
+
+class Convolve(Operator):
+    """
+    以第二个父节点的值为卷积核，对第一个父节点的值做二维离散卷积
+    """
+
+    def __init__(self, *parents):
+        assert len(parents) == 2
+        Operator.__init__(self, *parents)
+
+        self.padded = None
+
+    def compute(self):
+
+        data = self.parents[0].value  # 输入特征图
+        kernel = self.parents[1].value  # 卷积核
+
+        w, h = data.shape  # 输入特征图的宽和高
+        kw, kh = kernel.shape  # 卷积核尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+
+        # 补齐数据边缘
+        pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
+        self.padded = np.mat(np.zeros((pw, ph)))
+        self.padded[hkw:hkw + w, hkh:hkh + h] = data
+
+        self.value = np.mat(np.zeros((w, h)))
+
+        # 二维离散卷积
+        for i in np.arange(hkw, hkw + w):
+            for j in np.arange(hkh, hkh + h):
+                self.value[i - hkw, j - hkh] = np.sum(
+                    np.multiply(self.padded[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh], kernel))
+
+    def get_jacobi(self, parent):
+
+        data = self.parents[0].value  # 输入特征图
+        kernel = self.parents[1].value  # 卷积核
+
+        w, h = data.shape  # 输入特征图的宽和高
+        kw, kh = kernel.shape  # 卷积核尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+
+        # 补齐数据边缘
+        pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
+
+        jacobi = []
+        if parent is self.parents[0]:
+            for i in np.arange(hkw, hkw + w):
+                for j in np.arange(hkh, hkh + h):
+                    mask = np.mat(np.zeros((pw, ph)))
+                    mask[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh] = kernel
+                    jacobi.append(mask[hkw:hkw + w, hkh:hkh + h].A1)
+        elif parent is self.parents[1]:
+            for i in np.arange(hkw, hkw + w):
+                for j in np.arange(hkh, hkh + h):
+                    jacobi.append(self.padded[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh].A1)
+        else:
+            raise Exception("You're not my father")
+
+        return np.mat(jacobi)
+
+
+class MaxPooling(Operator):
+    """
+    最大值池化
+    """
+
+    def __init__(self, parent, size, stride):
+        Operator.__init__(self, parent)
+
+        assert isinstance(stride, tuple) and len(stride) == 2
+        self.stride = stride
+
+        assert isinstance(size, tuple) and len(size) == 2
+        self.size = size
+
+        self.flag = None
+
+    def compute(self):
+        data = self.parents[0].value  # 输入特征图
+        w, h = data.shape  # 输入特征图的宽和高
+        dim = w * h
+        sw, sh = self.stride
+        kw, kh = self.size  # 池化核尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 池化核长宽的一半
+
+        result = []
+        flag = []
+
+        for i in np.arange(0, w, sw):
+            row = []
+            for j in np.arange(0, h, sh):
+                # 取池化窗口中的最大值
+                top, bottom = max(0, i - hkw), min(w, i + hkw + 1)
+                left, right = max(0, j - hkh), min(h, j + hkh + 1)
+                window = data[top:bottom, left:right]
+                row.append(
+                    np.max(window)
+                )
+
+                # 记录最大值在原特征图中的位置
+                pos = np.argmax(window)
+                w_width = right - left
+                offset_w, offset_h = top + pos // w_width, left + pos % w_width
+                offset = offset_w * w + offset_h
+                tmp = np.zeros(dim)
+                tmp[offset] = 1
+                flag.append(tmp)
+
+            result.append(row)
+
+        self.flag = np.mat(flag)
+        self.value = np.mat(result)
+
+    def get_jacobi(self, parent):
+
+        assert parent is self.parents[0] and self.jacobi is not None
+        return self.flag
+
+
+class Flatten(Operator):
+    """
+    将多个父节点的值连接成向量
+    """
+
+    def compute(self):
+        assert len(self.parents) > 0
+
+        # 将所有负矩阵展平并连接成一个向量
+        self.value = np.concatenate(
+            [p.value.flatten() for p in self.parents],
+            axis=1
+        ).T
+
+    def get_jacobi(self, parent):
+        assert parent in self.parents
+
+        dimensions = [p.dimension() for p in self.parents]  # 各个父节点的元素数量
+        pos = self.parents.index(parent)  # 当前是第几个父节点
+        dimension = parent.dimension()  # 当前父节点的元素数量
+
+        assert dimension == dimensions[pos]
+
+        jacobi = np.mat(np.zeros((self.dimension(), dimension)))
+        start_row = int(np.sum(dimensions[:pos]))
+        jacobi[start_row:start_row + dimension, 0:dimension] = np.eye(dimension)
+
+        return jacobi
