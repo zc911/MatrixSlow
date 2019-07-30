@@ -18,6 +18,14 @@ def get_node_from_graph(node_name, name_scope=None, graph=None):
     return None
 
 
+def update_node_value_in_graph(node_name, new_value, name_scope=None, graph=None):
+    node = get_node_from_graph(node_name, name_scope, graph)
+    assert node is not None
+
+    assert node.value.shape == new_value.shape
+    node.value = new_value
+
+
 class name_scope(object):
     def __init__(self, name_scope):
         self.name_scope = name_scope
