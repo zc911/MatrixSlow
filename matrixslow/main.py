@@ -23,6 +23,7 @@ from optimizer import *
 from trainer import Saver, SimpleTrainer, SyncTrainerParameterServer
 from util import *
 from util import ClassMining
+from layer import *
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -105,30 +106,24 @@ def build_model(feature_num):
     '''
     构建DNN计算图网络
     '''
-    with ms.name_scope('Variable'):
-        x = ms.Variable((feature_num, 1), init=False,
-                        trainable=False, name='placeholder_x')
-        w1 = ms.Variable((HIDDEN1_SIZE, feature_num), init=True,
-                         trainable=True, name='weights_w1')
-        b1 = ms.Variable((HIDDEN1_SIZE, 1), init=True,
-                         trainable=True, name='bias_b1')
-        w2 = ms.Variable((HIDDEN2_SIZE, HIDDEN1_SIZE), init=True,
-                         trainable=True, name='weights_w2')
-        b2 = ms.Variable((HIDDEN2_SIZE, 1), init=True,
-                         trainable=True, name='bias_b2')
-        w3 = ms.Variable((CLASSES, HIDDEN2_SIZE), init=True,
-                         trainable=True, name='weights_w3')
-        b3 = ms.Variable((CLASSES, 1), init=True,
-                         trainable=True, name='bias_b3')
+    with ms.name_scope('Conv'):
+        x = Variable((feature_num, 1), init=False, trainable=False, name="img")  # 占位符，28x28 的图像
+        img = Reshape(x, (28, 28))
+        conv1 = conv([img], (28, 28), 6, (3, 3), "ReLU")  # 第一卷积层
+        pooling1 = pooling(conv1, (3, 3), (2, 2))  # 第一池化层
+
+        conv2 = conv(pooling1, (14, 14), 6, (3, 3), "ReLU")  # 第二卷积层
+        pooling2 = pooling(conv2, (3, 3), (2, 2))  # 第二池化层
+
 
     with ms.name_scope('Hidden'):
-        hidden1 = ReLU(Add(MatMul(w1, x), b1), name='hidden1')
-        hidden2 = ReLU(Add(MatMul(w2, hidden1), b2), name='hidden2')
+        fc1 = fc(Flatten(*pooling2), 294, 100, "ReLU")  # 第一全连接层
+
 
     with ms.name_scope('Logits'):
-        logit = Add(MatMul(w3, hidden2), b3, name='logits')
+        logits = fc(fc1, 100, 10, "None")  # 第二全连接层
 
-    return x, logit, w1, b1
+    return x, logits, None, None
 
 
 def build_metrics(logits, y, metrics_names=None):
@@ -244,7 +239,7 @@ CLASSES = 10
 
 cluster_conf = {
     "ps": [
-        "k0625v.add.lycc.qihoo.net:5000"
+        "k0625v.add.lycc.qihoo.net:5001"
     ],
     "workers": [
         "k0110v.add.lycc.qihoo.net:5000",
