@@ -131,11 +131,11 @@ class Variable(Node):
     变（向）量节点
     """
 
-    def __init__(self, dim, name, init=False, trainable=True):
+    def __init__(self, dim, init=False, trainable=True, **kargs):
         """
         变量节点没有父节点，构造函数接受变量的维数，以及变量是否参与训练的标识
         """
-        Node.__init__(self, name=name)
+        Node.__init__(self,  **kargs)
         self.dim = dim
 
         # 如果需要初始化，则以正态分布随机初始化变量的值
