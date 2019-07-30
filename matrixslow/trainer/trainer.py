@@ -33,7 +33,13 @@ class Trainer(object):
         self.metrics_ops = metrics_ops
 
         self.print_iteration_interval = kargs.get(
-            'print_iteration_interval', 1000)
+            'print_iteration_interval', 100)
+
+    def _variable_weights_init(self):
+        '''
+        权值变量初始化，具体的初始化操作由子类完成
+        '''
+        pass
 
     def one_step(self, data_x, data_y):
         '''
@@ -97,6 +103,8 @@ class Trainer(object):
         assert len(train_x) == len(train_y)
         if test_x is not None and test_y is not None:
             assert len(test_x) == len(test_y)
-
+        # 初始化权值变量
+        self._variable_weights_init()
+        print('Variable weights init finished')
         # 传入数据，开始主循环
         self.main_loop(train_x, train_y, test_x, test_y)
