@@ -24,6 +24,7 @@ from trainer import Saver, SimpleTrainer, DistTrainerParameterServer
 from dist.ps import ParameterServiceServer
 from util import *
 from util import ClassMining
+from util import vis
 
 matplotlib.use('TkAgg')
 sys.path.append('.')
@@ -149,6 +150,9 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
                     trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
+
+    vis.draw_graph()
+    return
     if mode == 'local':
         trainer = SimpleTrainer(x, y, logits, loss_op, optimizer_op,
                                 epoches=epoches, batch_size=batch_size,

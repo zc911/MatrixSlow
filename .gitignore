@@ -5,3 +5,4 @@ dataset
 tmp
 export
 *.code-workspace
+*.html
