@@ -5,3 +5,5 @@ dataset
 tmp
 export
 *.code-workspace
+*.html
+*.DS_Store
