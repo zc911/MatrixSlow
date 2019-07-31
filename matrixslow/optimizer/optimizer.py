@@ -11,6 +11,7 @@ import numpy as np
 from core import Node, Variable, get_node_from_graph
 from core.graph import Graph
 
+
 class Optimizer(object):
     """
     优化器基类
@@ -46,7 +47,7 @@ class Optimizer(object):
         抽象方法，执行具体的梯度更新算法，由子类实现
         '''
 
-    def _apply_gradients(self, node_gradients_dict):
+    def apply_gradients(self, node_gradients_dict, acc_no=None, gather=True):
         for node, gradient in node_gradients_dict.items():
             if isinstance(node, Node):
                 pass
@@ -54,12 +55,17 @@ class Optimizer(object):
                 target_node = get_node_from_graph(node)
                 assert target_node is not None
                 assert self.acc_gradient[target_node].shape == gradient.shape
-                self.acc_gradient[target_node] = gradient
-                self.acc_no = 1
+                if gather:
+                    self.acc_gradient[target_node] = gradient
+                else:
+                    self.acc_gradient[target_node] += gradient
+                # 如果未传入acc_no，表示传入的是平均梯度, 强制让acc_no变为1，避免梯度更新时重复平均
+                self.acc_no = 1 if acc_no is None else acc_no
 
     def update(self, var_gradients=None):
         if var_gradients is not None:
-            self._apply_gradients(var_gradients)
+            self.apply_gradients(var_gradients)
+
         self._update()
         # 清除累计梯度
         self.acc_gradient.clear()

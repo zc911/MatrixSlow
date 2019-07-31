@@ -5,11 +5,10 @@ Created on Thu Jul 18 20:48:16 CST 2019
 @author: chenzhen
 """
 
-from dist import ps
-from trainer import Trainer
 from core import Variable, update_node_value_in_graph
-
 from core.graph import default_graph
+from dist import allreduce, ps
+from trainer import Trainer
 
 
 class DistTrainerParameterServer(Trainer):
@@ -41,3 +40,38 @@ class DistTrainerParameterServer(Trainer):
         node_gradients_dict = self.ps_client.pull_gradients()
         # 使用平均梯度，更新本地变量
         self.optimizer.update(node_gradients_dict)
+
+
+class DistTrainerRingAllReduce(Trainer):
+    def __init__(self, *args, **kargs):
+        Trainer.__init__(self, *args, **kargs)
+        self.cluster_conf = kargs['cluster_conf']
+        self.index = kargs['index']
+
+        self.acc_no = 0
+        self.workers = self.cluster_conf['workers']
+        self.host = self.workers[self.index]
+        self.worker_num = len(self.workers)
+        self.step = self.worker_num - 1
+        self.target_index = (self.index + 1) % self.worker_num
+        self.target_host = self.workers[self.target_index]
+
+        self.server = allreduce.RingAllReduceServer(
+            self.host, self._scatter, self._gather)
+        self.client = allreduce.RingAllReduceClient(self.target_host)
+
+        self.server.serve()
+
+    def _scatter(self, node_gradients_dict, acc_no):
+        self.acc_no += acc_no
+        self.optimizer.apply_gradients(
+            node_gradients_dict, gather=False)
+
+    def _gather(self, node_gradients_dict):
+
+        self.optimizer.apply_gradients(
+            node_gradients_dict, acc_no=self.acc_no, gather=True)
+
+    def _optimizer_update(self):
+
+        self.optimizer.update()

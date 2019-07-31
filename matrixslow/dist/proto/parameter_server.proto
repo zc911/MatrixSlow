@@ -1,31 +1,12 @@
 // python -m grpc_tools.protoc --python_out=. --grpc_python_out=. -I. parameter_server.proto
 syntax = "proto3";
 
+import "common.proto";
+
 service ParameterService {
     rpc VariableWeightsInit(VariableWeightsReqResp) returns (VariableWeightsReqResp) {}
     rpc Push(ParameterPushReq) returns (ParameterPushResp) {}
     rpc Pull(ParameterPullReq) returns (ParameterPullResp) {}
-}
-
-message Node {
-    string name = 1;
-    string node_type = 2;
-}
-
-message Matrix {
-    repeated float value = 1;
-    repeated int32 dim = 2;
-}
-
-message NodeGradients {
-    repeated Node nodes = 1;
-    repeated Matrix gradients = 2;
-    int32 acc_no = 3;
-}
-
-message VariableWeightsReqResp {
-    repeated Node variables = 1;
-    repeated Matrix weights = 2;
 }
 
 

@@ -22,7 +22,8 @@ from ops import Add, Logistic, MatMul, ReLU, SoftMax
 from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Accuracy, Metrics
 from optimizer import *
-from trainer import Saver, SimpleTrainer, SyncTrainerParameterServer
+from dist.ps import ParameterServiceServer
+from trainer import Saver, SimpleTrainer, DistTrainerParameterServer
 from util import *
 from util import ClassMining
 
@@ -145,8 +146,6 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
     optimizer_op = optimizer.Adam(default_graph, loss_op)
 
-    vis.draw_graph()
-    return
     if mode == 'local':
         trainer = SimpleTrainer(x, y, logits, loss_op, optimizer_op,
                                 epoches=epoches, batch_size=batch_size,
@@ -155,7 +154,7 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
                                     logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
     else:
 
-        trainer = SyncTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
+        trainer = DistTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
                                              epoches=epoches, batch_size=batch_size,
                                              eval_on_train=True, cluster_conf=cluster_conf,
                                              metrics_ops=build_metrics(
@@ -243,7 +242,7 @@ CLASSES = 10
 
 cluster_conf = {
     "ps": [
-        "k0625v.add.lycc.qihoo.net:5001"
+        "localhost:5001"
     ],
     "workers": [
         "k0110v.add.lycc.qihoo.net:5000",
@@ -262,8 +261,8 @@ if __name__ == '__main__':
 
     role = args.role
     if role == 'ps':
-        ps_host = cluster_conf['ps'][0]
-        ps.serve(ps_host, len(cluster_conf['workers']))
+        server = ParameterServiceServer(cluster_conf, sync=True)
+        server.serve()
 
     else:
         train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+import "common.proto";
+
+service RingAllReduceService {
+    rpc VariableWeightsInit(VariableWeightsReqResp) returns (VariableWeightsReqResp) {}
+    rpc Recieve(RingAllReduceReq) returns (RingAllReduceResp) {}
+}
+
+message RingAllReduceReq {
+    enum Stage {
+        INIT = 0;
+        SCATTER = 1;
+        GATHER = 2;
+    }
+    Stage stage = 1;
+    NodeGradients node_gradients = 2;
+}
+
+message RingAllReduceResp {
+
+}

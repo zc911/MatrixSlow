@@ -12,6 +12,7 @@ import numpy as np
 
 import grpc
 from core import Node
+from dist import DistCommon
 from dist.proto import parameter_server_pb2 as pspb
 from dist.proto import parameter_server_pb2_grpc as psrpc
 
@@ -44,91 +45,12 @@ class ParameterService(psrpc.ParameterServiceServicer):
 
         self.acc_no = 0
 
-    @staticmethod
-    def _serialize_proto_node_gradients(node_gradients_dict):
-        '''
-        把'节点-梯度'dict序列化成protobuf对象
-        '''
-        proto_node_gradients = pspb.NodeGradients()
-        for name, g in node_gradients_dict.items():
-            proto_node = proto_node_gradients.nodes.add()
-            if isinstance(name, Node):
-                name = name.name
-            proto_node.name = name
-            proto_gradient = proto_node_gradients.gradients.add()
-
-            proto_gradient.value.extend(np.array(g).flatten())
-            proto_gradient.dim.extend(list(g.shape))
-
-        return proto_node_gradients
-
-    @staticmethod
-    def _deserialize_proto_node_gradients(node_gradients):
-        '''
-        把protobuf对象，反序列化为'节点-梯度'dict
-        '''
-        proto_nodes = node_gradients.nodes
-        proto_gradients = node_gradients.gradients
-
-        assert len(proto_nodes) == len(proto_gradients)
-
-        node_with_gradients = dict()
-
-        for index in range(len(proto_nodes)):
-            node_name = proto_nodes[index].name
-            gradients_value = proto_gradients[index].value
-            gradients_dim = tuple(proto_gradients[index].dim)
-            gradient_mat = np.mat(gradients_value, dtype=np.float32)
-            gradient_mat = np.reshape(gradient_mat, gradients_dim)
-            node_with_gradients[node_name] = gradient_mat
-        return node_with_gradients
-
-    @staticmethod
-    def _serialize_proto_variable_weights(varibale_weights_dict):
-        '''
-        把'变量-权值'dict序列化成protobuf对象
-        '''
-        var_weights_req_resp = pspb.VariableWeightsReqResp()
-        for name, mat in varibale_weights_dict.items():
-            var = var_weights_req_resp.variables.add()
-            if isinstance(name, Node):
-                name = name.name
-            var.name = name
-            weight = var_weights_req_resp.weights.add()
-
-            weight.value.extend(np.array(mat).flatten())
-            weight.dim.extend(list(mat.shape))
-
-        return var_weights_req_resp
-
-    @staticmethod
-    def _deserialize_proto_variable_weights(variable_weights_req_resp):
-        '''
-        把protobuf对象，反序列化为'变量-权重'dict
-        '''
-        proto_variables = variable_weights_req_resp.variables
-        proto_weights = variable_weights_req_resp.weights
-
-        assert len(proto_variables) == len(proto_weights)
-
-        var_weights_dict = dict()
-
-        for index in range(len(proto_variables)):
-            var_name = proto_variables[index].name
-            weights_value = proto_weights[index].value
-            weigths_dim = tuple(proto_weights[index].dim)
-            weights_mat = np.mat(weights_value, dtype=np.float32)
-            weights_mat = np.reshape(weights_mat, weigths_dim)
-            var_weights_dict[var_name] = weights_mat
-
-        return var_weights_dict
-
     def _deserialize_push_req(self, push_req):
         '''
         反序列化push request
         '''
         acc_no = push_req.node_gradients.acc_no
-        node_with_gradients = ParameterService._deserialize_proto_node_gradients(
+        node_with_gradients = DistCommon._deserialize_proto_node_gradients(
             push_req.node_gradients)
 
         return node_with_gradients, acc_no
@@ -137,7 +59,7 @@ class ParameterService(psrpc.ParameterServiceServicer):
         '''
         序列化pull response
         '''
-        proto_node_gradients = ParameterService._serialize_proto_node_gradients(
+        proto_node_gradients = DistCommon._serialize_proto_node_gradients(
             self.node_gradients_cache)
         resp = pspb.ParameterPullResp(node_gradients=proto_node_gradients)
         return resp
@@ -263,17 +185,17 @@ class ParameterService(psrpc.ParameterServiceServicer):
         self.init_lock.acquire()
         # 如果未初始化，使用第一个worker的权值变量
         if not self.is_init:
-            self.variable_weights_cache = ParameterService._deserialize_proto_variable_weights(
+            self.variable_weights_cache = DistCommon._deserialize_proto_variable_weights(
                 varibale_weights_req)
         # 其他worker使用已经存在的权值变量，更新自身
-        resp = ParameterService._serialize_proto_variable_weights(
+        resp = DistCommon._serialize_proto_variable_weights(
             self.variable_weights_cache)
         self.is_init = True
         self.init_lock.release()
         return resp
 
 
-class ParameterServiceClient():
+class ParameterServiceClient(object):
     '''
     Parameter Server的client帮助类
     '''
@@ -285,10 +207,10 @@ class ParameterServiceClient():
         assert self.stub is not None
 
     def variable_weights_init(self, var_weights_dict):
-        init_req = ParameterService._serialize_proto_variable_weights(
+        init_req = DistCommon._serialize_proto_variable_weights(
             var_weights_dict)
         init_resp = self.stub.VariableWeightsInit(init_req)
-        duplicated_var_weights_dict = ParameterService._deserialize_proto_variable_weights(
+        duplicated_var_weights_dict = DistCommon._deserialize_proto_variable_weights(
             init_resp)
         return duplicated_var_weights_dict
 
@@ -297,7 +219,7 @@ class ParameterServiceClient():
         执行梯度push操作
         '''
         # 把梯度序列化为protobuf对象
-        proto_node_gradients = ParameterService._serialize_proto_node_gradients(
+        proto_node_gradients = DistCommon._serialize_proto_node_gradients(
             acc_gradients)
         # 当前梯度的累计数量
         proto_node_gradients.acc_no = acc_no
@@ -318,7 +240,7 @@ class ParameterServiceClient():
 
         pull_resp = self.stub.Pull(pull_req)
         # 把返回protobuf对象结果反序列化
-        node_gradients_dict = ParameterService._deserialize_proto_node_gradients(
+        node_gradients_dict = DistCommon._deserialize_proto_node_gradients(
             pull_resp.node_gradients)
         return node_gradients_dict
 
@@ -335,13 +257,13 @@ class ParameterServiceServer(object):
             ThreadPoolExecutor(max_workers=self.max_workers))
         psrpc.add_ParameterServiceServicer_to_server(
             ParameterService(self.worker_num, self.sync), self.server)
-        print('Parameter server (mode: {}) running on {} and worker num {}'.format('Sync' if self.sync else 'Async',
-                                                                                   self.host, self.worker_num))
         self.server.add_insecure_port(self.host)
 
     def serve(self):
         # 启动 rpc 服务
         self.server.start()
+        print('Parameter server (mode: {}) running on {} and worker num {}'.format('Sync' if self.sync else 'Async',
+                                                                                   self.host, self.worker_num))
         try:
             while True:
                 time.sleep(60*60*24)  # one day in seconds
