@@ -1,5 +1,5 @@
-from ..core import *
-from ..ops import *
+from core import *
+from ops import *
 
 
 def conv(feature_maps, input_shape, kernels, kernel_shape, activation):

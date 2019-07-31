@@ -165,9 +165,9 @@ class Convolve(Operator):
     以第二个父节点的值为卷积核，对第一个父节点的值做二维离散卷积
     """
 
-    def __init__(self, *parents):
+    def __init__(self, *parents, **kargs):
         assert len(parents) == 2
-        Operator.__init__(self, *parents)
+        Operator.__init__(self, *parents, **kargs)
 
         self.padded = None
 
@@ -227,8 +227,8 @@ class MaxPooling(Operator):
     最大值池化
     """
 
-    def __init__(self, parent, size, stride):
-        Operator.__init__(self, parent)
+    def __init__(self, parent, size, stride, **kargs):
+        Operator.__init__(self, parent, **kargs)
 
         assert isinstance(stride, tuple) and len(stride) == 2
         self.stride = stride
