@@ -23,7 +23,7 @@ from ops.loss import CrossEntropyWithSoftMax, LogLoss
 from ops.metrics import Accuracy, Metrics
 from optimizer import *
 from dist.ps import ParameterServiceServer
-from trainer import Saver, SimpleTrainer, DistTrainerParameterServer
+from trainer import Saver, SimpleTrainer, DistTrainerParameterServer, DistTrainerRingAllReduce
 from util import *
 from util import ClassMining
 
@@ -137,7 +137,7 @@ def build_metrics(logits, y, metrics_names=None):
     return metrics_ops
 
 
-def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
+def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_index=None):
 
     x, logits, w, b = build_model(FEATURE_DIM)
 
@@ -152,14 +152,19 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode):
                                 eval_on_train=True,
                                 metrics_ops=build_metrics(
                                     logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
-    else:
+    elif mode == 'ps':
 
         trainer = DistTrainerParameterServer(x, y, logits, loss_op, optimizer_op,
                                              epoches=epoches, batch_size=batch_size,
                                              eval_on_train=True, cluster_conf=cluster_conf,
                                              metrics_ops=build_metrics(
                                                  logits, y, ['Accuracy', 'Recall', 'F1Score', 'Precision']))
-
+    elif mode == 'allreduce':
+        trainer = DistTrainerRingAllReduce(x, y, logits, loss_op, optimizer_op,
+                                           epoches=epoches, batch_size=batch_size,
+                                           eval_on_train=True, cluster_conf=cluster_conf, worker_index=worker_index,
+                                           metrics_ops=build_metrics(
+                                               logits, y, ['Accuracy']))
     trainer.train(train_x, train_y, test_x, test_y)
 
     saver = Saver('./export')
@@ -245,9 +250,14 @@ cluster_conf = {
         "localhost:5001"
     ],
     "workers": [
-        "k0110v.add.lycc.qihoo.net:5000",
-        "k0629v.add.lycc.qihoo.net:5000"
+        "localhost:5000",
+        "localhost:5002",
+        "localhost:5004"
     ]
+    # "workers": [
+    #     "k0110v.add.lycc.qihoo.net:5000",
+    #     "k0629v.add.lycc.qihoo.net:5000"
+    # ]
 }
 
 if __name__ == '__main__':
@@ -268,10 +278,11 @@ if __name__ == '__main__':
         train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
         mode = args.mode
         phase = args.phase
+        worker_index = args.worker_index
         if phase == 'train':
             start = time.time()
             w, b = train(train_x[:15000], train_y[:15000], test_x[:200],
-                         test_y[:200], TOTAL_EPOCHES, BATCH_SIZE, mode)
+                         test_y[:200], TOTAL_EPOCHES, BATCH_SIZE, mode, worker_index)
             # w, b = train(train_x, train_y, test_x,
             #              test_y, TOTAL_EPOCHES, BATCH_SIZE)
             end = time.time()
