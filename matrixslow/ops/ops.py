@@ -308,3 +308,23 @@ class Flatten(Operator):
         jacobi[start_row:start_row + dimension, 0:dimension] = np.eye(dimension)
 
         return jacobi
+
+
+class ScalarMultiply(Operator):
+    """
+    用标量（1x1矩阵）数乘一个矩阵
+    """
+
+    def compute(self):
+        assert self.parents[0].shape() == (1, 1)  # 第一个父节点是标量
+        self.value = np.multiply(self.parents[0].value, self.parents[1].value)
+
+    def get_jacobi(self, parent):
+
+        assert parent in self.parents
+
+        if parent is self.parents[0]:
+            return self.parents[1].value.flatten().T
+        else:
+            return np.mat(np.eye(self.parents[1].dimension())) * self.parents[0].value[0, 0]
+
