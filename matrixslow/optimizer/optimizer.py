@@ -57,16 +57,20 @@ class Optimizer(object):
                 assert self.acc_gradient[target_node].shape == gradient.shape
                 if summarize:
                     self.acc_gradient[target_node] += gradient
-                    self.acc_no += acc_no
                 else:
                     self.acc_gradient[target_node] = gradient
-                    # 传入的是平均梯度, 强制让acc_no变为1，避免梯度更新时重复平均
-                    self.acc_no = 1
+        if summarize:
+            self.acc_no += acc_no
+        else:
+            if acc_no is None:
+                # 传入的是平均梯度, 强制让acc_no变为1，避免梯度更新时重复平均
+                self.acc_no = 1
+            else:
+                self.acc_no = acc_no
 
     def update(self, var_gradients=None):
         if var_gradients is not None:
             self.apply_gradients(var_gradients)
-
         self._update()
         # 清除累计梯度
         self.acc_gradient.clear()

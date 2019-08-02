@@ -5,6 +5,7 @@ Created on Wed Jul 31 12:18:05 CST 2019
 @author: chenzhen
 """
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import grpc
@@ -24,16 +25,18 @@ class RingAllReduceServer(object):
 
         self.server.add_insecure_port(self.host)
 
-    def serve(self, daemon=True):
+    def _serve(self):
         self.server.start()
         print(
             'Ring All-Reduce worker {} listening on {}'.format(self.worker_index, self.host))
-        if not daemon:
-            try:
-                while True:
-                    time.sleep(60*60*24)  # one day in seconds
-            except KeyboardInterrupt:
-                self.server.stop(0)
+        try:
+            while True:
+                time.sleep(60*60*24)  # one day in seconds
+        except KeyboardInterrupt:
+            self.server.stop(0)
+
+    def serve(self):
+        threading.Thread(target=self._serve).start()
 
 
 class RingAllReduceService(arrpc.RingAllReduceServiceServicer):
@@ -48,34 +51,41 @@ class RingAllReduceService(arrpc.RingAllReduceServiceServicer):
         stage = send_req.stage
         node_gradients_dict = DistCommon._deserialize_proto_node_gradients(
             send_req.node_gradients)
-        acc_no = send_req.node_gradients.acc_no
 
         if stage == arpb.RingAllReduceReq.SCATTER:
+            acc_no = send_req.node_gradients.acc_no
             self.scatter_fn(node_gradients_dict, acc_no)
         elif stage == arpb.RingAllReduceReq.GATHER:
             self.gather_fn(node_gradients_dict)
         else:
             print(
                 'Invalid ring all-reduce stage: {}, it should be either SCATTER or GATHER'.format(stage))
+        return arpb.RingAllReduceResp()
 
 
 class RingAllReduceClient(object):
-    def __init__(self, target_host):
-        self.channel = grpc.insecure_channel(target_host)
+    def __init__(self, target_host, timeout=30):
+        self.timeout = timeout
         try:
-            grpc.channel_ready_future(self.channel).result(timeout=10)
+            print('Try connect to target worker {}'.format(target_host))
+            self.channel = grpc.insecure_channel(target_host)
+            grpc.channel_ready_future(
+                self.channel).result(timeout=self.timeout)
         except grpc.FutureTimeoutError:
-            print("!!!!!!!!!!!!!")
-        self.stub = arrpc.RingAllReduceServiceStub(self.channel)
-        print('Connect to target worker {}'.format(target_host))
-        assert self.stub is not None
+            print("Failed connect to target worker")
+            assert 0
+        else:
+            self.stub = arrpc.RingAllReduceServiceStub(self.channel)
+            print('Connected to target worker {}'.format(target_host))
+            assert self.stub is not None
 
     def send(self, node_gradients_dict, acc_no, stage):
 
         proto_node_gradients = DistCommon._serialize_proto_node_gradients(
             node_gradients_dict)
-        proto_node_gradients.acc_no = acc_no
+
         if stage == 'scatter':
+            proto_node_gradients.acc_no = acc_no
             stage = arpb.RingAllReduceReq.SCATTER
         elif stage == 'gather':
             stage = arpb.RingAllReduceReq.GATHER
@@ -84,8 +94,4 @@ class RingAllReduceClient(object):
                 'Invalid ring all-reduce stage: {}, it should be either SCATTER or GATHER'.format(stage))
         send_req = arpb.RingAllReduceReq(
             stage=stage, node_gradients=proto_node_gradients)
-        print('try to send....')
-        resp = self.stub.Recieve(send_req)
-        print('finish to send....')
-
-        print(resp)
+        resp = self.stub.Recieve(send_req, timeout=self.timeout)
