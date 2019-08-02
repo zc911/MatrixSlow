@@ -13,6 +13,7 @@ from google.protobuf import symbol_database as _symbol_database
 _sym_db = _symbol_database.Default()
 
 
+from . import common_pb2 as common__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
@@ -20,169 +21,11 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='',
   syntax='proto3',
   serialized_options=None,
-  serialized_pb=_b('\n\x16parameter_server.proto\"\'\n\x04Node\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x11\n\tnode_type\x18\x02 \x01(\t\"$\n\x06Matrix\x12\r\n\x05value\x18\x01 \x03(\x02\x12\x0b\n\x03\x64im\x18\x02 \x03(\x05\"Q\n\rNodeGradients\x12\x14\n\x05nodes\x18\x01 \x03(\x0b\x32\x05.Node\x12\x1a\n\tgradients\x18\x02 \x03(\x0b\x32\x07.Matrix\x12\x0e\n\x06\x61\x63\x63_no\x18\x03 \x01(\x05\"L\n\x16VariableWeightsReqResp\x12\x18\n\tvariables\x18\x01 \x03(\x0b\x32\x05.Node\x12\x18\n\x07weights\x18\x02 \x03(\x0b\x32\x07.Matrix\":\n\x10ParameterPushReq\x12&\n\x0enode_gradients\x18\x01 \x01(\x0b\x32\x0e.NodeGradients\"\x13\n\x11ParameterPushResp\"(\n\x10ParameterPullReq\x12\x14\n\x05nodes\x18\x01 \x03(\x0b\x32\x05.Node\";\n\x11ParameterPullResp\x12&\n\x0enode_gradients\x18\x01 \x01(\x0b\x32\x0e.NodeGradients2\xbf\x01\n\x10ParameterService\x12I\n\x13VariableWeightsInit\x12\x17.VariableWeightsReqResp\x1a\x17.VariableWeightsReqResp\"\x00\x12/\n\x04Push\x12\x11.ParameterPushReq\x1a\x12.ParameterPushResp\"\x00\x12/\n\x04Pull\x12\x11.ParameterPullReq\x1a\x12.ParameterPullResp\"\x00\x62\x06proto3')
-)
+  serialized_pb=_b('\n\x16parameter_server.proto\x1a\x0c\x63ommon.proto\":\n\x10ParameterPushReq\x12&\n\x0enode_gradients\x18\x01 \x01(\x0b\x32\x0e.NodeGradients\"\x13\n\x11ParameterPushResp\"(\n\x10ParameterPullReq\x12\x14\n\x05nodes\x18\x01 \x03(\x0b\x32\x05.Node\";\n\x11ParameterPullResp\x12&\n\x0enode_gradients\x18\x01 \x01(\x0b\x32\x0e.NodeGradients2\xbf\x01\n\x10ParameterService\x12I\n\x13VariableWeightsInit\x12\x17.VariableWeightsReqResp\x1a\x17.VariableWeightsReqResp\"\x00\x12/\n\x04Push\x12\x11.ParameterPushReq\x1a\x12.ParameterPushResp\"\x00\x12/\n\x04Pull\x12\x11.ParameterPullReq\x1a\x12.ParameterPullResp\"\x00\x62\x06proto3')
+  ,
+  dependencies=[common__pb2.DESCRIPTOR,])
 
 
-
-
-_NODE = _descriptor.Descriptor(
-  name='Node',
-  full_name='Node',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='Node.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='node_type', full_name='Node.node_type', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=_b("").decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=26,
-  serialized_end=65,
-)
-
-
-_MATRIX = _descriptor.Descriptor(
-  name='Matrix',
-  full_name='Matrix',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='value', full_name='Matrix.value', index=0,
-      number=1, type=2, cpp_type=6, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='dim', full_name='Matrix.dim', index=1,
-      number=2, type=5, cpp_type=1, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=67,
-  serialized_end=103,
-)
-
-
-_NODEGRADIENTS = _descriptor.Descriptor(
-  name='NodeGradients',
-  full_name='NodeGradients',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='nodes', full_name='NodeGradients.nodes', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='gradients', full_name='NodeGradients.gradients', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='acc_no', full_name='NodeGradients.acc_no', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=105,
-  serialized_end=186,
-)
-
-
-_VARIABLEWEIGHTSREQRESP = _descriptor.Descriptor(
-  name='VariableWeightsReqResp',
-  full_name='VariableWeightsReqResp',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='variables', full_name='VariableWeightsReqResp.variables', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-    _descriptor.FieldDescriptor(
-      name='weights', full_name='VariableWeightsReqResp.weights', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=188,
-  serialized_end=264,
-)
 
 
 _PARAMETERPUSHREQ = _descriptor.Descriptor(
@@ -211,8 +54,8 @@ _PARAMETERPUSHREQ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=266,
-  serialized_end=324,
+  serialized_start=40,
+  serialized_end=98,
 )
 
 
@@ -235,8 +78,8 @@ _PARAMETERPUSHRESP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=326,
-  serialized_end=345,
+  serialized_start=100,
+  serialized_end=119,
 )
 
 
@@ -266,8 +109,8 @@ _PARAMETERPULLREQ = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=347,
-  serialized_end=387,
+  serialized_start=121,
+  serialized_end=161,
 )
 
 
@@ -297,54 +140,18 @@ _PARAMETERPULLRESP = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=389,
-  serialized_end=448,
+  serialized_start=163,
+  serialized_end=222,
 )
 
-_NODEGRADIENTS.fields_by_name['nodes'].message_type = _NODE
-_NODEGRADIENTS.fields_by_name['gradients'].message_type = _MATRIX
-_VARIABLEWEIGHTSREQRESP.fields_by_name['variables'].message_type = _NODE
-_VARIABLEWEIGHTSREQRESP.fields_by_name['weights'].message_type = _MATRIX
-_PARAMETERPUSHREQ.fields_by_name['node_gradients'].message_type = _NODEGRADIENTS
-_PARAMETERPULLREQ.fields_by_name['nodes'].message_type = _NODE
-_PARAMETERPULLRESP.fields_by_name['node_gradients'].message_type = _NODEGRADIENTS
-DESCRIPTOR.message_types_by_name['Node'] = _NODE
-DESCRIPTOR.message_types_by_name['Matrix'] = _MATRIX
-DESCRIPTOR.message_types_by_name['NodeGradients'] = _NODEGRADIENTS
-DESCRIPTOR.message_types_by_name['VariableWeightsReqResp'] = _VARIABLEWEIGHTSREQRESP
+_PARAMETERPUSHREQ.fields_by_name['node_gradients'].message_type = common__pb2._NODEGRADIENTS
+_PARAMETERPULLREQ.fields_by_name['nodes'].message_type = common__pb2._NODE
+_PARAMETERPULLRESP.fields_by_name['node_gradients'].message_type = common__pb2._NODEGRADIENTS
 DESCRIPTOR.message_types_by_name['ParameterPushReq'] = _PARAMETERPUSHREQ
 DESCRIPTOR.message_types_by_name['ParameterPushResp'] = _PARAMETERPUSHRESP
 DESCRIPTOR.message_types_by_name['ParameterPullReq'] = _PARAMETERPULLREQ
 DESCRIPTOR.message_types_by_name['ParameterPullResp'] = _PARAMETERPULLRESP
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
-Node = _reflection.GeneratedProtocolMessageType('Node', (_message.Message,), {
-  'DESCRIPTOR' : _NODE,
-  '__module__' : 'parameter_server_pb2'
-  # @@protoc_insertion_point(class_scope:Node)
-  })
-_sym_db.RegisterMessage(Node)
-
-Matrix = _reflection.GeneratedProtocolMessageType('Matrix', (_message.Message,), {
-  'DESCRIPTOR' : _MATRIX,
-  '__module__' : 'parameter_server_pb2'
-  # @@protoc_insertion_point(class_scope:Matrix)
-  })
-_sym_db.RegisterMessage(Matrix)
-
-NodeGradients = _reflection.GeneratedProtocolMessageType('NodeGradients', (_message.Message,), {
-  'DESCRIPTOR' : _NODEGRADIENTS,
-  '__module__' : 'parameter_server_pb2'
-  # @@protoc_insertion_point(class_scope:NodeGradients)
-  })
-_sym_db.RegisterMessage(NodeGradients)
-
-VariableWeightsReqResp = _reflection.GeneratedProtocolMessageType('VariableWeightsReqResp', (_message.Message,), {
-  'DESCRIPTOR' : _VARIABLEWEIGHTSREQRESP,
-  '__module__' : 'parameter_server_pb2'
-  # @@protoc_insertion_point(class_scope:VariableWeightsReqResp)
-  })
-_sym_db.RegisterMessage(VariableWeightsReqResp)
 
 ParameterPushReq = _reflection.GeneratedProtocolMessageType('ParameterPushReq', (_message.Message,), {
   'DESCRIPTOR' : _PARAMETERPUSHREQ,
@@ -382,16 +189,16 @@ _PARAMETERSERVICE = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   serialized_options=None,
-  serialized_start=451,
-  serialized_end=642,
+  serialized_start=225,
+  serialized_end=416,
   methods=[
   _descriptor.MethodDescriptor(
     name='VariableWeightsInit',
     full_name='ParameterService.VariableWeightsInit',
     index=0,
     containing_service=None,
-    input_type=_VARIABLEWEIGHTSREQRESP,
-    output_type=_VARIABLEWEIGHTSREQRESP,
+    input_type=common__pb2._VARIABLEWEIGHTSREQRESP,
+    output_type=common__pb2._VARIABLEWEIGHTSREQRESP,
     serialized_options=None,
   ),
   _descriptor.MethodDescriptor(
