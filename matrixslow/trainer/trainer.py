@@ -78,19 +78,27 @@ class Trainer(object):
         训练（验证）的主循环
         '''
         for self.epoch in range(self.epoches):
-            print('Epoch [{}] train start...'.format(self.epoch + 1))
+            print('- Epoch [{}] train start...'.format(self.epoch + 1))
             start_time = time.time()
+            last_batch_start_time = time.time()
+            last_iter_start_time = time.time()
             for i in range(len(train_x)):
                 self.one_step(train_x[i], train_y[i])
 
-                if i % self.print_iteration_interval == 1:
-                    print('Epoch [{}] iteration [{}] train finished and loss value: {:4f}'.format(
-                        self.epoch + 1, i, float(self.loss_op.value)))
+                if (i+1) % self.print_iteration_interval == 0:
+                    print('-- Epoch [{}] iteration [{}] finished, time cout: {:.2f}  and loss value: {:4f}'.format(
+                        self.epoch + 1, i, time.time() - last_iter_start_time, float(self.loss_op.value)))
+                    last_iter_start_time = time.time()
 
-                if i % self.batch_size == 1:
+                if (i+1) % self.batch_size == 0:
+                    last_batch_end_time = time.time()
+                    last_update_start_time = time.time()
                     self._optimizer_update()
+                    print('---- Batch [{}] finished, computing cost: {:.2f} and gradients update cost: {:.2f}'.format(
+                        int((i+1)/self.batch_size), last_batch_end_time - last_batch_start_time, time.time() - last_update_start_time))
+                    last_batch_start_time = time.time()
 
-            print('Epoch [{}] train finished, time cost: {} and loss: {:.4f}'.format(
+            print('Epoch [{}] train finished, time cost: {:.2f} and loss: {:.4f}'.format(
                 self.epoch + 1, time.time() - start_time, float(self.loss_op.value)))
 
             if self.eval_on_train and test_x is not None and test_y is not None:

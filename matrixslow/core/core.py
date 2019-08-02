@@ -4,6 +4,7 @@ Created on Fri Jul 26 10:00:02 CST 2019
 
 @author: chenzhen
 """
+from core.node import Variable
 from core.graph import default_graph
 
 
@@ -16,6 +17,17 @@ def get_node_from_graph(node_name, name_scope=None, graph=None):
         if node.name == node_name:
             return node
     return None
+
+
+def get_trainable_variables_from_graph(node_name=None, name_scope=None, graph=None):
+    if graph is None:
+        graph = default_graph
+    if node_name is None:
+        return [node for node in default_graph.nodes if isinstance(node, Variable) and node.trainable]
+
+    if name_scope:
+        node_name = name_scope + '/' + node_name
+    return get_node_from_graph(node_name, graph=graph)
 
 
 def update_node_value_in_graph(node_name, new_value, name_scope=None, graph=None):
