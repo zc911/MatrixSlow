@@ -262,7 +262,7 @@ class ParameterServiceServer(object):
     def serve(self):
         # 启动 rpc 服务
         self.server.start()
-        print('Parameter server (mode: {}) running on {} and worker num {}'.format('Sync' if self.sync else 'Async',
+        print('[PS] Parameter server (mode: {}) running on {} and worker num {}'.format('Sync' if self.sync else 'Async',
                                                                                    self.host, self.worker_num))
         try:
             while True:

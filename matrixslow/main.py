@@ -250,9 +250,9 @@ cluster_conf = {
         "localhost:5001"
     ],
     "workers": [
-        "localhost:5000",
-        "localhost:5002",
-        "localhost:5004"
+        "localhost:6000",
+        "localhost:6002",
+        "localhost:6004"
     ]
     # "workers": [
     #     "k0110v.add.lycc.qihoo.net:5000",

@@ -10,6 +10,7 @@ import abc
 
 import numpy as np
 
+from core import default_graph, Variable
 
 class Trainer(object):
     '''
@@ -35,11 +36,12 @@ class Trainer(object):
         self.print_iteration_interval = kargs.get(
             'print_iteration_interval', 100)
 
+    @abc.abstractmethod
     def _variable_weights_init(self):
         '''
         权值变量初始化，具体的初始化操作由子类完成
         '''
-        pass
+        raise NotImplementedError()
 
     def one_step(self, data_x, data_y):
         '''
@@ -98,7 +100,7 @@ class Trainer(object):
                         int((i+1)/self.batch_size), last_batch_end_time - last_batch_start_time, time.time() - last_update_start_time))
                     last_batch_start_time = time.time()
 
-            print('Epoch [{}] train finished, time cost: {:.2f} and loss: {:.4f}'.format(
+            print('- Epoch [{}] train finished, time cost: {:.2f} and loss: {:.4f}'.format(
                 self.epoch + 1, time.time() - start_time, float(self.loss_op.value)))
 
             if self.eval_on_train and test_x is not None and test_y is not None:
@@ -113,6 +115,7 @@ class Trainer(object):
             assert len(test_x) == len(test_y)
         # 初始化权值变量
         self._variable_weights_init()
-        print('Variable weights init finished')
+        print('[INIT] Variable weights init finished')
+        var_weights_dict = dict()
         # 传入数据，开始主循环
         self.main_loop(train_x, train_y, test_x, test_y)
