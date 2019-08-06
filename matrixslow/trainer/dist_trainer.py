@@ -33,6 +33,7 @@ class DistTrainerParameterServer(Trainer):
             var_weights_dict)
         for var_name, weights in duplicated_var_weights_dict.items():
             update_node_value_in_graph(var_name, weights)
+        print('[INIT] Worker variable weights initialized')
 
     def _optimizer_update(self):
         # 把当前梯度push到ps上。此操作可能被block，直到所有节点都pull完成
@@ -63,6 +64,10 @@ class DistTrainerRingAllReduce(Trainer):
         self.target_host = self.workers[(
             self.worker_index + 1) % self.worker_num]
 
+        # 本节点是否已被初始化
+        self.is_init = False
+        self.init_cond = threading.Condition()
+
         self.cur_partion_index = self.worker_index
         self.partition = []
         # 获取所有可训练节点，即所有需要更新的权值变量
@@ -78,7 +83,10 @@ class DistTrainerRingAllReduce(Trainer):
 
         # 创建本节点的梯度接收服务
         allreduce.RingAllReduceServer(
-            self.host, self.worker_index, self._scatter_callback, self._gather_callback).serve()
+            self.host, self.worker_index,
+            self._variable_weights_init_callback,
+            self._scatter_callback,
+            self._gather_callback).serve()
         # 创建连接目标节点的梯度发送client
         self.client = allreduce.RingAllReduceClient(self.target_host)
 
@@ -110,6 +118,18 @@ class DistTrainerRingAllReduce(Trainer):
             part_gradients[var] = self.optimizer.acc_gradient[var]
         return part_gradients
 
+    def _variable_weights_init_callback(self, var_weights_dict):
+        # 第一个节点不需要接收上一个节点的初始值
+        if self.worker_index != 0:
+            print('[INIT] Variables initializing weights from last worker node...')
+            for var_name, weights in var_weights_dict.items():
+                update_node_value_in_graph(var_name, weights)
+        # 已初始化完成，通知发送流程
+        self.init_cond.acquire()
+        self.is_init = True
+        self.init_cond.notify_all()
+        self.init_cond.release()
+
     def _scatter_callback(self, node_gradients_dict, acc_no):
         '''
         Scatter 阶段的回调函数，接收上一个节点发送过来的梯度和样本数
@@ -129,7 +149,7 @@ class DistTrainerRingAllReduce(Trainer):
 
     def _gather_callback(self, node_gradients_dict):
         '''
-        All-gather 节点的回调函数，接收上一个节点发送过来的梯度
+        All-gather 阶段的回调函数，接收上一个节点发送过来的梯度
         '''
         if self.cond.acquire():
             while self.is_recieved:
@@ -164,6 +184,22 @@ class DistTrainerRingAllReduce(Trainer):
             self.cond.release()
         else:
             self.cond.wait()
+
+    def _variable_weights_init(self):
+        var_weights_dict = dict()
+        for node in default_graph.nodes:
+            if isinstance(node, Variable) and node.trainable:
+                var_weights_dict[node.name] = node.value
+        print('[INIT] Send variable init weights to worker ', self.target_host)
+        # 第一个节点不需要等待，使用默认值更新给下一个节点
+        if self.worker_index == 0:
+            self.client.variable_weights_init(var_weights_dict)
+        else:
+            self.init_cond.acquire()
+            while not self.is_init:
+                self.init_cond.wait()
+            self.init_cond.release()
+            self.client.variable_weights_init(var_weights_dict)
 
     def _optimizer_update(self):
         # N-1 次的scatter操作，把本节点的梯度切片发送给下一个节点

@@ -13,7 +13,6 @@ import time
 
 import matplotlib
 import numpy as np
-from sklearn.metrics import accuracy_score
 
 import matrixslow as ms
 from core.graph import default_graph
@@ -246,18 +245,24 @@ CLASSES = 10
 
 
 cluster_conf = {
+    # "ps": [
+    #     "localhost:5001"
+    # ],
+    # "workers": [
+    #     "localhost:6000",
+    #     "localhost:6002",
+    #     "localhost:6004"
+    # ]
     "ps": [
-        "localhost:5001"
+        "k0625v.add.lycc.qihoo.net:5000"
     ],
     "workers": [
-        "localhost:5000",
-        "localhost:5002",
-        "localhost:5004"
+        "k0110v.add.lycc.qihoo.net:5000",
+        "k0629v.add.lycc.qihoo.net:5000",
+        "p30217v.hulk.shbt.qihoo.net:5000",
+        "k0631v.add.lycc.qihoo.net:5000",
+        "k7791v.add.bjyt.qihoo.net:5000"
     ]
-    # "workers": [
-    #     "k0110v.add.lycc.qihoo.net:5000",
-    #     "k0629v.add.lycc.qihoo.net:5000"
-    # ]
 }
 
 if __name__ == '__main__':
