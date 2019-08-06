@@ -33,6 +33,7 @@ class DistTrainerParameterServer(Trainer):
             var_weights_dict)
         for var_name, weights in duplicated_var_weights_dict.items():
             update_node_value_in_graph(var_name, weights)
+        print('[INIT] Worker variable weights initialized')
 
     def _optimizer_update(self):
         # 把当前梯度push到ps上。此操作可能被block，直到所有节点都pull完成

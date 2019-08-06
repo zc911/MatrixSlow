@@ -1,0 +1,26 @@
+单机训练
+
+---- Batch [1] finished, computing cost: 8.38, gradients update cost: 0.01 and total cost: 8.39
+---- Batch [2] finished, computing cost: 9.26, gradients update cost: 0.01 and total cost: 9.28
+---- Batch [3] finished, computing cost: 11.04, gradients update cost: 0.01 and total cost: 11.05
+---- Batch [4] finished, computing cost: 10.99, gradients update cost: 0.01 and total cost: 11.01
+---- Batch [5] finished, computing cost: 10.53, gradients update cost: 0.01 and total cost: 10.54
+---- Batch [6] finished, computing cost: 10.02, gradients update cost: 0.01 and total cost: 10.03
+---- Batch [7] finished, computing cost: 10.74, gradients update cost: 0.01 and total cost: 10.76
+---- Batch [8] finished, computing cost: 10.88, gradients update cost: 0.01 and total cost: 10.89
+---- Batch [9] finished, computing cost: 11.10, gradients update cost: 0.01 and total cost: 11.11
+---- Batch [10] finished, computing cost: 10.86, gradients update cost: 0.01 and total cost: 10.88
+---- Batch [11] finished, computing cost: 10.06, gradients update cost: 0.01 and total cost: 10.07
+---- Batch [12] finished, computing cost: 10.18, gradients update cost: 0.01 and total cost: 10.19
+-- Epoch [1] iteration [99] finished, time cout: 129.29  and loss value: 2.240981
+---- Batch [13] finished, computing cost: 10.44, gradients update cost: 0.01 and total cost: 10.45
+---- Batch [14] finished, computing cost: 10.91, gradients update cost: 0.01 and total cost: 10.92
+---- Batch [15] finished, computing cost: 10.58, gradients update cost: 0.01 and total cost: 10.59
+---- Batch [16] finished, computing cost: 10.85, gradients update cost: 0.01 and total cost: 10.86
+---- Batch [17] finished, computing cost: 10.85, gradients update cost: 0.01 and total cost: 10.86
+---- Batch [18] finished, computing cost: 11.05, gradients update cost: 0.01 and total cost: 11.07
+---- Batch [19] finished, computing cost: 10.54, gradients update cost: 0.02 and total cost: 10.56
+---- Batch [20] finished, computing cost: 10.81, gradients update cost: 0.01 and total cost: 10.82
+---- Batch [21] finished, computing cost: 9.70, gradients update cost: 0.01 and total cost: 9.72
+---- Batch [22] finished, computing cost: 11.34, gradients update cost: 0.01 and total cost: 11.35
+---- Batch [23] finished, computing cost: 11.23, gradients update cost: 0.02 and total cost: 11.24

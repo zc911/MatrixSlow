@@ -1,0 +1,48 @@
+    "ps": [
+        "k0625v.add.lycc.qihoo.net:5000"
+    ],
+    "workers": [
+        "k0110v.add.lycc.qihoo.net:5000",
+        "k0631v.add.lycc.qihoo.net:5000"
+    ]
+
+
+
+[INIT] Worker variable weights initialized
+[INIT] Variable weights init finished
+- Epoch [1] train start, batch size: 8, train data size: 15000
+---- Batch [1] finished, computing cost: 12.01, gradients update cost: 0.28 and total cost: 12.29
+---- Batch [2] finished, computing cost: 11.67, gradients update cost: 0.10 and total cost: 11.77
+---- Batch [3] finished, computing cost: 13.87, gradients update cost: 0.15 and total cost: 14.02
+---- Batch [4] finished, computing cost: 11.31, gradients update cost: 0.11 and total cost: 11.42
+---- Batch [5] finished, computing cost: 11.75, gradients update cost: 0.11 and total cost: 11.85
+---- Batch [6] finished, computing cost: 11.63, gradients update cost: 0.11 and total cost: 11.74
+---- Batch [7] finished, computing cost: 11.96, gradients update cost: 0.10 and total cost: 12.06
+---- Batch [8] finished, computing cost: 11.31, gradients update cost: 0.09 and total cost: 11.41
+---- Batch [9] finished, computing cost: 12.97, gradients update cost: 0.11 and total cost: 13.08
+---- Batch [10] finished, computing cost: 12.85, gradients update cost: 0.10 and total cost: 12.95
+---- Batch [11] finished, computing cost: 11.42, gradients update cost: 0.10 and total cost: 11.53
+---- Batch [12] finished, computing cost: 11.34, gradients update cost: 0.12 and total cost: 11.45
+-- Epoch [1] iteration [99] finished, time cout: 150.89  and loss value: 2.242541
+
+
+------------
+
+
+[GRPC] Connected to parameter service: k0625v.add.lycc.qihoo.net:5000
+[INIT] Worker variable weights initialized
+[INIT] Variable weights init finished
+- Epoch [1] train start, batch size: 8, train data size: 15000
+---- Batch [1] finished, computing cost: 10.15, gradients update cost: 0.08 and total cost: 10.23
+---- Batch [2] finished, computing cost: 9.48, gradients update cost: 2.28 and total cost: 11.75
+---- Batch [3] finished, computing cost: 10.92, gradients update cost: 3.07 and total cost: 13.99
+---- Batch [4] finished, computing cost: 11.17, gradients update cost: 0.26 and total cost: 11.43
+---- Batch [5] finished, computing cost: 10.22, gradients update cost: 1.63 and total cost: 11.85
+---- Batch [6] finished, computing cost: 9.07, gradients update cost: 2.67 and total cost: 11.74
+---- Batch [7] finished, computing cost: 10.68, gradients update cost: 1.38 and total cost: 12.06
+---- Batch [8] finished, computing cost: 9.81, gradients update cost: 1.59 and total cost: 11.40
+---- Batch [9] finished, computing cost: 9.27, gradients update cost: 3.80 and total cost: 13.08
+---- Batch [10] finished, computing cost: 9.75, gradients update cost: 3.21 and total cost: 12.96
+---- Batch [11] finished, computing cost: 10.66, gradients update cost: 0.86 and total cost: 11.52
+---- Batch [12] finished, computing cost: 11.26, gradients update cost: 0.20 and total cost: 11.47
+-- Epoch [1] iteration [99] finished, time cout: 149.01  and loss value: 2.242541

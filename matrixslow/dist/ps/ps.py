@@ -187,6 +187,7 @@ class ParameterService(psrpc.ParameterServiceServicer):
         if not self.is_init:
             self.variable_weights_cache = DistCommon._deserialize_proto_variable_weights(
                 varibale_weights_req)
+            print('[INIT] Parameter service variable weights initialized')
         # 其他worker使用已经存在的权值变量，更新自身
         resp = DistCommon._serialize_proto_variable_weights(
             self.variable_weights_cache)
@@ -205,6 +206,7 @@ class ParameterServiceClient(object):
         self.stub = psrpc.ParameterServiceStub(
             grpc.insecure_channel(ps_host))
         assert self.stub is not None
+        print('[GRPC] Connected to parameter service: {}'.format(ps_host))
 
     def variable_weights_init(self, var_weights_dict):
         init_req = DistCommon._serialize_proto_variable_weights(

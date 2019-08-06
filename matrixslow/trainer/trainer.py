@@ -12,6 +12,7 @@ import numpy as np
 
 from core import default_graph, Variable
 
+
 class Trainer(object):
     '''
     训练器
@@ -80,7 +81,8 @@ class Trainer(object):
         训练（验证）的主循环
         '''
         for self.epoch in range(self.epoches):
-            print('- Epoch [{}] train start...'.format(self.epoch + 1))
+            print('- Epoch [{}] train start, batch size: {}, train data size: {}'.format(
+                self.epoch + 1, self.batch_size, len(train_x)))
             start_time = time.time()
             last_batch_start_time = time.time()
             last_iter_start_time = time.time()
@@ -96,8 +98,10 @@ class Trainer(object):
                     last_batch_end_time = time.time()
                     last_update_start_time = time.time()
                     self._optimizer_update()
-                    print('---- Batch [{}] finished, computing cost: {:.2f} and gradients update cost: {:.2f}'.format(
-                        int((i+1)/self.batch_size), last_batch_end_time - last_batch_start_time, time.time() - last_update_start_time))
+                    computing_cost = last_batch_end_time - last_batch_start_time
+                    gra_update_cost = time.time() - last_update_start_time
+                    print('---- Batch [{}] finished, computing cost: {:.2f}, gradients update cost: {:.2f} and total cost: {:.2f}'.format(
+                        int((i+1)/self.batch_size), computing_cost, gra_update_cost, computing_cost + gra_update_cost))
                     last_batch_start_time = time.time()
 
             print('- Epoch [{}] train finished, time cost: {:.2f} and loss: {:.4f}'.format(
