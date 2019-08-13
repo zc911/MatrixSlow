@@ -5,7 +5,7 @@ Created on Thu Jul 25 15:58:54 CST 2019
 @author: chenzhen
 """
 
-from trainer import Trainer
+from .trainer import Trainer
 
 
 class SimpleTrainer(Trainer):

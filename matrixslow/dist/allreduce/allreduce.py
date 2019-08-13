@@ -9,11 +9,11 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 
 import grpc
-from core import default_graph
-from dist.dist import DistCommon
-from dist.proto import allreduce_pb2 as arpb
-from dist.proto import allreduce_pb2_grpc as arrpc
-from dist.proto import common_pb2
+from ...core import default_graph
+from ..dist import DistCommon
+from ..proto import allreduce_pb2 as arpb
+from ..proto import allreduce_pb2_grpc as arrpc
+from ..proto import common_pb2
 
 
 class RingAllReduceServer(object):

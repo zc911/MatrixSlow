@@ -1,34 +1,27 @@
 # -*- coding: utf-8 -*-
-from layer import *
-from util import vis
-"""
-Created on Wed July  9 15:13:01 2019
-
-@author: chenzhen
-"""
-import sys
 import argparse
 import random
+import sys
+sys.path.append('.')
+sys.path.append('../')
 import time
 
 import matplotlib
 import numpy as np
 
 import matrixslow as ms
-from core.graph import default_graph
-from dist import ps
-from ops import Add, Logistic, MatMul, ReLU, SoftMax
-from ops.loss import CrossEntropyWithSoftMax, LogLoss
-from ops.metrics import Accuracy, Metrics
-from optimizer import *
-from dist.ps import ParameterServiceServer
-from trainer import Saver, SimpleTrainer, DistTrainerParameterServer, DistTrainerRingAllReduce
-from util import *
-from util import ClassMining
+from matrixslow.dist.ps import ps
+from matrixslow.layer import *
+from matrixslow.ops import Add, Logistic, MatMul, ReLU, SoftMax
+from matrixslow.ops.loss import CrossEntropyWithSoftMax, LogLoss
+from matrixslow.ops.metrics import Accuracy, Metrics
+from matrixslow.optimizer import *
+from matrixslow.trainer import (DistTrainerParameterServer,
+                                DistTrainerRingAllReduce, Saver, SimpleTrainer)
+from matrixslow.util import *
+from matrixslow.util import ClassMining, vis
 
-
-matplotlib.use('TkAgg')
-sys.path.append('.')
+from matrixslow_serving.exporter import Exporter
 
 
 def plot_data(data_x, data_y, weights=None, bias=None):
@@ -104,6 +97,31 @@ def random_gen_dateset(feature_num, sample_num, test_radio=0.3, seed=41):
             data_y[train_size:, :])
 
 
+def build_simple_model(feature_num):
+    with ms.name_scope('Input'):
+        x = ms.Variable((feature_num, 1), init=False,
+                        trainable=False, name='img')
+
+    with ms.name_scope('Hidden'):
+        w1 = ms.Variable((HIDDEN1_SIZE, feature_num), init=True,
+                         trainable=True, name='weights_w1')
+        b1 = ms.Variable((HIDDEN1_SIZE, 1), init=True,
+                         trainable=True, name='bias_b1')
+        hidden1 = Add(MatMul(w1, x), b1)
+        w2 = ms.Variable((HIDDEN2_SIZE, HIDDEN1_SIZE),
+                         init=True, trainable=True, name='weights_w2')
+        b2 = ms.Variable((HIDDEN2_SIZE, 1), init=True,
+                         trainable=True, name='bias_b2')
+        hidden2 = Add(MatMul(w2, hidden1), b2)
+
+    with ms.name_scope('Logits'):
+        w3 = ms.Variable((CLASSES, HIDDEN2_SIZE),
+                         init=True, trainable=True)
+        b3 = ms.Variable((CLASSES, 1), init=True, trainable=True)
+        logits = Add(MatMul(w3, hidden2), b3, name='logits')
+    return x, logits
+
+
 def build_model(feature_num):
     '''
     构建DNN计算图网络
@@ -136,14 +154,23 @@ def build_metrics(logits, y, metrics_names=None):
     return metrics_ops
 
 
+def save():
+    exporter = Exporter()
+    sig = exporter.signature('Input/img', 'Logits/logits')
+    saver = Saver('./export')
+    saver.save(model_file_name='my_model.json',
+               weights_file_name='my_weights.npz', service_signature=sig)
+
+
 def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_index=None):
 
-    x, logits, w, b = build_model(FEATURE_DIM)
+    # x, logits, w, b = build_model(FEATURE_DIM)
+    x, logits = build_simple_model(FEATURE_DIM)
 
     y = ms.Variable((CLASSES, 1), init=False,
                     trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
-    optimizer_op = optimizer.Adam(default_graph, loss_op)
+    optimizer_op = optimizer.Adam(ms.default_graph, loss_op)
 
     if mode == 'local':
         trainer = SimpleTrainer(x, y, logits, loss_op, optimizer_op,
@@ -166,11 +193,7 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_in
                                                logits, y, ['Accuracy']))
     trainer.train(train_x, train_y, test_x, test_y)
 
-    saver = Saver('./export')
-    saver.save(model_file_name='my_model.json',
-               weights_file_name='my_weights.npz')
-
-    return w, b
+    # return w, b
 
 
 def inference_after_building_model(test_x, test_y):
@@ -179,7 +202,7 @@ def inference_after_building_model(test_x, test_y):
     要求构建的计算图必须与原计算图保持完全一致
     '''
     # 重新构建计算图
-    x, logits, w, b = build_model(FEATURE_DIM)
+    x, logits = build_simple_model(FEATURE_DIM)
     y = ms.Variable((CLASSES, 1), init=False,
                     trainable=False, name='placeholder_y')
 
@@ -215,7 +238,7 @@ def inference_without_building_model(test_x, test_y):
     saver.load(model_file_name='my_model.json',
                weights_file_name='my_weights.npz')
 
-    x = ms.get_node_from_graph('Variable/placeholder_x')
+    x = ms.get_node_from_graph('Input/img')
     y = ms.get_node_from_graph('placeholder_y')
     logits = ms.get_node_from_graph('logits', name_scope='Logits')
     accuracy = Accuracy(logits, y)
@@ -237,7 +260,7 @@ def inference_without_building_model(test_x, test_y):
 
 
 FEATURE_DIM = 784
-TOTAL_EPOCHES = 5
+TOTAL_EPOCHES = 1
 BATCH_SIZE = 8
 HIDDEN1_SIZE = 12
 HIDDEN2_SIZE = 8
@@ -254,14 +277,18 @@ cluster_conf = {
     #     "localhost:6004"
     # ]
     "ps": [
-        "k0625v.add.lycc.qihoo.net:5000"
+        # "k0625v.add.lycc.qihoo.net:5000"
+        "localhost:5000"
     ],
     "workers": [
-        "k0110v.add.lycc.qihoo.net:5000",
-        "k0629v.add.lycc.qihoo.net:5000",
-        "p30217v.hulk.shbt.qihoo.net:5000",
-        "k0631v.add.lycc.qihoo.net:5000",
-        "k7791v.add.bjyt.qihoo.net:5000"
+        "localhost:6000",
+        "localhost:6002",
+        "localhost:6004"
+        # "k0110v.add.lycc.qihoo.net:5000",
+        # "k0629v.add.lycc.qihoo.net:5000"
+        # "p30217v.hulk.shbt.qihoo.net:5000",
+        # "k0631v.add.lycc.qihoo.net:5000",
+        # "k7791v.add.bjyt.qihoo.net:5000"
     ]
 }
 
@@ -276,7 +303,7 @@ if __name__ == '__main__':
 
     role = args.role
     if role == 'ps':
-        server = ParameterServiceServer(cluster_conf, sync=True)
+        server = ps.ParameterServiceServer(cluster_conf, sync=True)
         server.serve()
 
     else:
@@ -286,15 +313,16 @@ if __name__ == '__main__':
         worker_index = args.worker_index
         if phase == 'train':
             start = time.time()
-            w, b = train(train_x[:15000], train_y[:15000], test_x[:200],
-                         test_y[:200], TOTAL_EPOCHES, BATCH_SIZE, mode, worker_index)
+            train(train_x[:1500], train_y[:1500], test_x[:],
+                  test_y[:], TOTAL_EPOCHES, BATCH_SIZE, mode, worker_index)
             # w, b = train(train_x, train_y, test_x,
             #              test_y, TOTAL_EPOCHES, BATCH_SIZE)
             end = time.time()
             print('Train time cost: ', end-start)
+            save()
 
         elif phase == 'eval':
-            # inference_after_building_model(test_x, test_y)
-            inference_without_building_model(test_x, test_y)
+            inference_after_building_model(test_x, test_y)
+            # inference_without_building_model(test_x, test_y)
         else:
             print('Usage: ./{} train|eval'.format(sys.argv[0]))

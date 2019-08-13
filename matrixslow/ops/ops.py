@@ -7,7 +7,7 @@ Created on Wed Jun  5 15:23:01 2019
 """
 import numpy as np
 
-from core import Node
+from ..core import Node
 
 
 def fill_diagonal(to_be_filled, filler):
@@ -15,7 +15,7 @@ def fill_diagonal(to_be_filled, filler):
     将 filler 矩阵填充在 to_be_filled 的对角线上
     """
     assert to_be_filled.shape[0] / \
-           filler.shape[0] == to_be_filled.shape[1] / filler.shape[1]
+        filler.shape[0] == to_be_filled.shape[1] / filler.shape[1]
     n = int(to_be_filled.shape[0] / filler.shape[0])
 
     r, c = filler.shape
@@ -215,7 +215,8 @@ class Convolve(Operator):
         elif parent is self.parents[1]:
             for i in np.arange(hkw, hkw + w):
                 for j in np.arange(hkh, hkh + h):
-                    jacobi.append(self.padded[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh].A1)
+                    jacobi.append(
+                        self.padded[i - hkw:i - hkw + kw, j - hkh:j - hkh + kh].A1)
         else:
             raise Exception("You're not my father")
 
@@ -305,7 +306,8 @@ class Flatten(Operator):
 
         jacobi = np.mat(np.zeros((self.dimension(), dimension)))
         start_row = int(np.sum(dimensions[:pos]))
-        jacobi[start_row:start_row + dimension, 0:dimension] = np.eye(dimension)
+        jacobi[start_row:start_row + dimension,
+               0:dimension] = np.eye(dimension)
 
         return jacobi
 
@@ -327,4 +329,3 @@ class ScalarMultiply(Operator):
             return self.parents[1].value.flatten().T
         else:
             return np.mat(np.eye(self.parents[1].dimension())) * self.parents[0].value[0, 0]
-

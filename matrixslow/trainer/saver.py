@@ -4,20 +4,21 @@ Created on Fri Jul 12 15:55:34 CST 2019
 
 @author: chenzhen
 """
-
 import json
 import os
+import datetime
 
 import numpy as np
 
-import matrixslow as ms
-from core import *
-from core import Node, Variable
-from core.graph import default_graph
-from ops import *
-from ops.loss import *
-from ops.metrics import *
-from util import ClassMining
+
+from ..core.core import get_node_from_graph
+from ..core import *
+from ..core import Node, Variable
+from ..core.graph import default_graph
+from ..ops import *
+from ..ops.loss import *
+from ..ops.metrics import *
+from ..util import ClassMining
 
 
 class Saver(object):
@@ -44,7 +45,7 @@ class Saver(object):
         dim = node_json.get('dim', Node)
         parents = []
         for parent_name in parents_name:
-            parent_node = ms.get_node_from_graph(parent_name, graph=graph)
+            parent_node = get_node_from_graph(parent_name, graph=graph)
             if parent_node is None:
                 parent_node_json = None
                 for node in from_model_json:
@@ -65,8 +66,12 @@ class Saver(object):
         else:
             return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name)
 
-    def _save_model_and_weights(self, graph, model_file_name, weights_file_name):
-        model_json = []
+    def _save_model_and_weights(self, graph, meta, service, model_file_name, weights_file_name):
+        model_json = {
+            'meta': meta,
+            'service': service
+        }
+        graph_json = []
         weights_dict = dict()
         # 把节点元信息保存为dict/json格式
         for node in graph.nodes:
@@ -82,13 +87,14 @@ class Saver(object):
             if node.value is not None:
                 if isinstance(node.value, np.matrix):
                     node_json['dim'] = node.value.shape
-            model_json.append(node_json)
+            graph_json.append(node_json)
 
             # 如果节点是Variable类型，保存其值
             # 其他类型的节点不需要保存
             if isinstance(node, Variable):
                 weights_dict[node.name] = node.value
 
+        model_json['graph'] = graph_json
         # json格式保存计算图元信息
         model_file_path = os.path.join(self.root_dir, model_file_name)
         with open(model_file_path, 'w') as model_file:
@@ -112,7 +118,7 @@ class Saver(object):
 
             # 判断是否创建了当前节点，如果已存在，更新其权值
             # 否则，创建节点
-            target_node = ms.get_node_from_graph(node_name, graph=graph)
+            target_node = get_node_from_graph(node_name, graph=graph)
             if target_node is None:
                 print('Target node {} of type {} not exists, try to create the instance'.format(
                     node_json['name'], node_json['node_type']))
@@ -120,7 +126,7 @@ class Saver(object):
                     graph, from_model_json, node_json)
             target_node.value = weights
 
-    def save(self, graph=None,
+    def save(self, graph=None, meta=None, service_signature=None,
              model_file_name='model.json',
              weights_file_name='weights.npz'):
         '''
@@ -129,7 +135,13 @@ class Saver(object):
         if graph is None:
             graph = default_graph
 
-        self._save_model_and_weights(graph, model_file_name, weights_file_name)
+        meta = {} if meta is None else meta
+        meta['save_time'] = str(datetime.datetime.now())
+        meta['weights_file_name'] = weights_file_name
+
+        service = {} if service_signature is None else service_signature
+        self._save_model_and_weights(
+            graph, meta, service, model_file_name, weights_file_name)
 
     def load(self, to_graph=None,
              model_file_name='model.json',
@@ -140,7 +152,8 @@ class Saver(object):
         if to_graph is None:
             to_graph = default_graph
 
-        model_json = []
+        model_json = {}
+        graph_json = []
         weights_dict = dict()
 
         # 读取计算图结构元数据
@@ -155,6 +168,10 @@ class Saver(object):
             for file_name in weights_npz_files.files:
                 weights_dict[file_name] = weights_npz_files[file_name]
             weights_npz_files.close()
-        self._restore_nodes(to_graph, model_json, weights_dict)
+        graph_json = model_json['graph']
+        self._restore_nodes(to_graph, graph_json, weights_dict)
         print('Load and restore model from {} and {}'.format(
             model_file_path, weights_file_path))
+        self.meta = model_json.get('meta', None)
+        self.service = model_json.get('service', None)
+        return self.meta, self.service

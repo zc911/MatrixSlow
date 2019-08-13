@@ -7,8 +7,8 @@ Created on Wed July  9 15:13:01 2019
 
 import numpy as np
 
-from core import Node
-from ops import SoftMax
+from ..core import Node
+from ..ops import SoftMax
 
 
 class LossFunction(Node):

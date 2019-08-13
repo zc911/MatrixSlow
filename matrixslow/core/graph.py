@@ -110,5 +110,6 @@ class Graph:
         # 保存图像
         # plt.savefig("computing_graph.png")  # save as png
 
+
 # 全局默认计算图
 default_graph = Graph()

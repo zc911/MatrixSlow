@@ -1,7 +1,7 @@
 from pyecharts import options as opts
 from pyecharts.charts import Graph
 
-from core import default_graph
+from ..core import default_graph
 
 
 def draw_graph():
