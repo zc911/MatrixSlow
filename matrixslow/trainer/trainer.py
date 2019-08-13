@@ -5,12 +5,12 @@ Created on Wed Jul 10 15:19:42 CST 2019
 
 @author: chenzhen
 """
-import time
 import abc
+import time
 
 import numpy as np
 
-from core import default_graph, Variable
+from ..core import Variable, default_graph
 
 
 class Trainer(object):
@@ -100,12 +100,12 @@ class Trainer(object):
                     self._optimizer_update()
                     computing_cost = last_batch_end_time - last_batch_start_time
                     gra_update_cost = time.time() - last_update_start_time
-                    print('---- Batch [{}] finished, computing cost: {:.2f}, gradients update cost: {:.2f} and total cost: {:.2f}'.format(
-                        int((i+1)/self.batch_size), computing_cost, gra_update_cost, computing_cost + gra_update_cost))
+                    # print('---- Batch [{}] finished, computing cost: {:.2f}, gradients update cost: {:.2f} and total cost: {:.2f}'.format(
+                    #     int((i+1)/self.batch_size), computing_cost, gra_update_cost, computing_cost + gra_update_cost))
                     last_batch_start_time = time.time()
 
-            print('- Epoch [{}] train finished, time cost: {:.2f} and loss: {:.4f}'.format(
-                self.epoch + 1, time.time() - start_time, float(self.loss_op.value)))
+            print('- Epoch [{}] train finished, time cost: {:.2f}'.format(
+                self.epoch + 1, time.time() - start_time))
 
             if self.eval_on_train and test_x is not None and test_y is not None:
                 self.eval(test_x, test_y)

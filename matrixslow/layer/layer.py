@@ -1,5 +1,6 @@
-from core import *
-from ops import *
+# -*- coding: utf-8 -*-
+from ..core import *
+from ..ops import *
 
 
 def conv(feature_maps, input_shape, kernels, kernel_shape, activation):

@@ -7,8 +7,7 @@ Created on Wed Jul 10 17:34:46 CST 2019
 
 import numpy as np
 
-from core import Node
-import matrixslow as ms
+from ..core import Node
 
 
 class Metrics(Node):

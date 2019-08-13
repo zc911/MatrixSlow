@@ -1,0 +1,21 @@
+// python -m grpc_tools.protoc --python_out=. --grpc_python_out=. -I. *.proto
+syntax = "proto3";
+
+package matrixslow.serving;
+
+service MatrixSlowServing {
+    rpc Predict(PredictReq) returns (PredictResp) {}
+}
+
+message Matrix {
+    repeated float value = 1;
+    repeated int32 dim = 2;
+}
+
+message PredictReq {
+    repeated Matrix data = 1;
+}
+
+message PredictResp {
+    repeated Matrix data = 1;
+}

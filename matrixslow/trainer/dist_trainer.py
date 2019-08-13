@@ -4,14 +4,14 @@ Created on Thu Jul 18 20:48:16 CST 2019
 
 @author: chenzhen
 """
-import time
 import threading
+import time
 
-from core import (Variable, get_trainable_variables_from_graph,
-                  update_node_value_in_graph)
-from core.graph import default_graph
-from dist import allreduce, ps
-from trainer import Trainer
+from ..core import (Variable, get_trainable_variables_from_graph,
+                    update_node_value_in_graph)
+from ..core.graph import default_graph
+from ..dist import allreduce, ps
+from .trainer import Trainer
 
 
 class DistTrainerParameterServer(Trainer):

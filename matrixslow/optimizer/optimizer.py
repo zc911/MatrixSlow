@@ -8,8 +8,8 @@ import abc
 
 import numpy as np
 
-from core import Node, Variable, get_node_from_graph
-from core.graph import Graph
+from ..core import Node, Variable, get_node_from_graph
+from ..core.graph import Graph
 
 
 class Optimizer(object):

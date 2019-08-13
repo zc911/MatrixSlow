@@ -11,10 +11,10 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 import grpc
-from core import Node
-from dist import DistCommon
-from dist.proto import parameter_server_pb2 as pspb
-from dist.proto import parameter_server_pb2_grpc as psrpc
+from ...core import Node
+from ..dist import DistCommon
+from ..proto import parameter_server_pb2 as pspb
+from ..proto import parameter_server_pb2_grpc as psrpc
 
 
 class ParameterService(psrpc.ParameterServiceServicer):
@@ -265,7 +265,7 @@ class ParameterServiceServer(object):
         # 启动 rpc 服务
         self.server.start()
         print('[PS] Parameter server (mode: {}) running on {} and worker num {}'.format('Sync' if self.sync else 'Async',
-                                                                                   self.host, self.worker_num))
+                                                                                        self.host, self.worker_num))
         try:
             while True:
                 time.sleep(60*60*24)  # one day in seconds

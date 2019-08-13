@@ -4,8 +4,8 @@ Created on Fri Jul 26 10:00:02 CST 2019
 
 @author: chenzhen
 """
-from core.node import Variable
-from core.graph import default_graph
+from .node import Variable
+from .graph import default_graph
 
 
 def get_node_from_graph(node_name, name_scope=None, graph=None):
