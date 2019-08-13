@@ -21,12 +21,7 @@ from matrixslow.trainer import (DistTrainerParameterServer,
 from matrixslow.util import *
 from matrixslow.util import ClassMining, vis
 
-from matrixslow_serving.export import Exporter
-
-
-
-
-
+from matrixslow_serving.exporter import Exporter
 
 
 def plot_data(data_x, data_y, weights=None, bias=None):

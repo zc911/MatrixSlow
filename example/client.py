@@ -11,11 +11,14 @@ sys.path.append('.')
 sys.path.append('../')
 
 import matplotlib
+matplotlib.use('TkAgg')
+
 import grpc
 import matrixslow_serving as mss
 from matrixslow.util import *
 from matrixslow_serving.serving import serving_pb2, serving_pb2_grpc
-matplotlib.use('TkAgg')
+
+
 
 class MatrixSlowServingClient(object):
     def __init__(self, host):
@@ -40,7 +43,7 @@ def plot_img_and_result(img, pred, gt):
 
     plt.title('Prediction: {} and Label: {}'.format(pred, gt), color='green' if pred == gt else 'red')
     plt.show(block=False)
-    plt.pause(3)
+    plt.pause(2)
 
 
 if __name__ == '__main__':
@@ -53,8 +56,9 @@ if __name__ == '__main__':
         rand_index = random.randrange(0, len(test_x))
         img = test_x[rand_index]
         label = test_y[rand_index]
-
+        print('Send prediction request...')
         resp = client.Predict([img])
+        print('Get Prediction results...')
         resp_mat_list = []
         for proto_mat in resp.data:
             dim = tuple(proto_mat.dim)

@@ -1,4 +1,9 @@
 # -*- coding: utf-8 -*-
+"""
+Created on Tue Aug 13 14:47:25 CST 2019
+
+@author: chenzhen
+"""
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -12,12 +17,21 @@ from .proto import serving_pb2, serving_pb2_grpc
 
 
 class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
+    '''
+    推理服务，主要流程：
+    1. 根据模型文件中定义的接口签名，从计算图中获取输入和输出节点
+    2. 接受网络请求并解析出模型输入
+    3. 调用计算图进行forward计算
+    4. 获取输出节点的值并返回给接口调用者
+    '''
+
     def __init__(self, root_dir, model_file_name, weights_file_name):
         self.root_dir = root_dir
         self.model_file_name = model_file_name
         self.weights_file_name = weights_file_name
 
         saver = ms.trainer.Saver(self.root_dir)
+        # 从文件中加载并还原计算图和权重参数，同时获取服务接口签名
         _, service = saver.load(model_file_name=self.model_file_name,
                                 weights_file_name=self.weights_file_name)
         assert service is not None
@@ -63,8 +77,10 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
     def _inference(self, inference_req):
         inference_resp_mat_list = []
         for mat in inference_req:
+            # 数据输入模型并执行forward运算
             self.input_node.set_value(mat.T)
             self.output_node.forward()
+            # 把输出节点的值作为结果返回
             inference_resp_mat_list.append(self.output_node.value)
         return inference_resp_mat_list
 
