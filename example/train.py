@@ -12,7 +12,7 @@ import numpy as np
 import matrixslow as ms
 from matrixslow.dist.ps import ps
 from matrixslow.layer import *
-from matrixslow.ops import Add, Logistic, MatMul, ReLU, SoftMax
+from matrixslow.ops import Add, Logistic, MatMul, ReLU, SoftMax, Reshape
 from matrixslow.ops.loss import CrossEntropyWithSoftMax, LogLoss
 from matrixslow.ops.metrics import Accuracy, Metrics
 from matrixslow.optimizer import *
@@ -20,6 +20,8 @@ from matrixslow.trainer import (DistTrainerParameterServer,
                                 DistTrainerRingAllReduce, Saver, SimpleTrainer)
 from matrixslow.util import *
 from matrixslow.util import ClassMining, vis
+
+from matrixslow.model import *
 
 from matrixslow_serving.exporter import Exporter
 
@@ -165,12 +167,13 @@ def save():
 def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_index=None):
 
     # x, logits, w, b = build_model(FEATURE_DIM)
-    x, logits = build_simple_model(FEATURE_DIM)
+    # x, logits = build_simple_model(FEATURE_DIM)
+    x, logits = multilayer_perception(FEATURE_DIM, CLASSES, [10, 10, 10], "ReLU")
 
     y = ms.Variable((CLASSES, 1), init=False,
                     trainable=False, name='placeholder_y')
     loss_op = CrossEntropyWithSoftMax(logits, y, name='loss')
-    optimizer_op = optimizer.Adam(ms.default_graph, loss_op)
+    optimizer_op = optimizer.Adam(ms.default_graph, loss_op, learning_rate=0.005)
 
     if mode == 'local':
         trainer = SimpleTrainer(x, y, logits, loss_op, optimizer_op,
@@ -260,10 +263,10 @@ def inference_without_building_model(test_x, test_y):
 
 
 FEATURE_DIM = 784
-TOTAL_EPOCHES = 1
-BATCH_SIZE = 8
-HIDDEN1_SIZE = 12
-HIDDEN2_SIZE = 8
+TOTAL_EPOCHES = 20
+BATCH_SIZE = 32
+HIDDEN1_SIZE = 200
+HIDDEN2_SIZE = 100
 CLASSES = 10
 
 
@@ -307,13 +310,13 @@ if __name__ == '__main__':
         server.serve()
 
     else:
-        train_x, train_y, test_x, test_y = util.mnist('../dataset/MNIST')
+        train_x, train_y, test_x, test_y = util.mnist('D:/develop/project/MatrixSlow/dataset/MNIST')
         mode = args.mode
         phase = args.phase
         worker_index = args.worker_index
         if phase == 'train':
             start = time.time()
-            train(train_x[:1500], train_y[:1500], test_x[:],
+            train(train_x[:], train_y[:], test_x[:],
                   test_y[:], TOTAL_EPOCHES, BATCH_SIZE, mode, worker_index)
             # w, b = train(train_x, train_y, test_x,
             #              test_y, TOTAL_EPOCHES, BATCH_SIZE)

@@ -1,0 +1,2 @@
+from .logistic_regression import logistic_regression
+from .multilayer_perception import multilayer_perception

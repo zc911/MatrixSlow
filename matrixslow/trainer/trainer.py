@@ -90,7 +90,7 @@ class Trainer(object):
                 self.one_step(train_x[i], train_y[i])
 
                 if (i+1) % self.print_iteration_interval == 0:
-                    print('-- Epoch [{}] iteration [{}] finished, time cout: {:.2f}  and loss value: {:4f}'.format(
+                    print('-- Epoch [{}] iteration [{}] finished, time cost: {:.2f}  and loss value: {:4f}'.format(
                         self.epoch + 1, i, time.time() - last_iter_start_time, float(self.loss_op.value)))
                     last_iter_start_time = time.time()
 
