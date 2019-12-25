@@ -65,3 +65,21 @@ class CrossEntropyWithSoftMax(LossFunction):
             return (prob - self.parents[1].value).T
         else:
             return (-np.log(prob)).T
+
+
+class PerceptionLoss(LossFunction):
+    """
+    感知机损失，输入为正时为0，输入为负时为输入的相反数
+    """
+
+    def compute(self):
+        self.value = np.mat(np.where(
+            self.parents[0].value >= 0.0, 0.0, -self.parents[0].value))
+
+    def get_jacobi(self, parent):
+        """
+        雅克比矩阵为零方阵
+        """
+        return np.zeros((self.dimension(), self.dimension()))
+
+

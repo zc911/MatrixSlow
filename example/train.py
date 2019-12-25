@@ -168,7 +168,7 @@ def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_in
 
     # x, logits, w, b = build_model(FEATURE_DIM)
     # x, logits = build_simple_model(FEATURE_DIM)
-    x, logits = multilayer_perception(FEATURE_DIM, CLASSES, [10, 10, 10], "ReLU")
+    x, logits = multilayer_perception(FEATURE_DIM, CLASSES, [100, 100, ], "ReLU")
 
     y = ms.Variable((CLASSES, 1), init=False,
                     trainable=False, name='placeholder_y')

@@ -98,7 +98,7 @@ class ReLU(Operator):
 
     def compute(self):
         self.value = np.mat(np.where(
-            self.parents[0].value > 0.0, self.parents[0].value, 0.1 * self.parents[0].value))  # 对父节点的每个分量施加 logistic
+            self.parents[0].value > 0.0, self.parents[0].value, 0.1 * self.parents[0].value))
 
     def get_jacobi(self, parent):
         return np.diag(np.where(self.parents[0].value.A1 > 0.0, 1.0, 0.1))
@@ -329,3 +329,13 @@ class ScalarMultiply(Operator):
             return self.parents[1].value.flatten().T
         else:
             return np.mat(np.eye(self.parents[1].dimension())) * self.parents[0].value[0, 0]
+
+
+class Step(Operator):
+
+    def compute(self):
+        self.value = np.mat(np.where(self.parents[0].value >= 0.0, 1.0, 0.0))
+
+    def get_jacobi(self, parent):
+        np.mat(np.eye(self.dimension()))
+        return np.zeros(np.where(self.parents[0].value.A1 >= 0.0, 0.0, -1.0))
