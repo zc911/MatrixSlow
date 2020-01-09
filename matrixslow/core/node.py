@@ -37,13 +37,6 @@ class Node(object):
         # 将本节点添加到计算图中
         self.graph.add_node(self)
 
-    def set_graph(self, graph):
-        """
-        设置计算图
-        """
-        assert isinstance(graph, Graph)
-        self.graph = graph
-
     def get_parents(self):
         """
         获取本节点的父节点

@@ -21,13 +21,13 @@ predict = ms.ops.Step(output)
 loss = ms.ops.loss.PerceptionLoss(ms.ops.MatMul(label, output))
 
 # 对一个样本计算损失值和输出，首先将样本赋给x变量
-x.set_value(np.mat([182, 72, 0.17]).T)
+x.set_value(np.mat([[182], [72], [0.17]]))
 label.set_value(np.mat([[1]]))
 
 # 计算模型的输出
 predict.forward()
 loss.forward()
-print("该样本为{:s}， 损失值是{:.8f}".format(
+print("模型判断该样本为{:s}， 损失值是{:.8f}".format(
     "男士" if predict.value[0, 0] == 1.0 else "女士",
     loss.value[0, 0])
 )
