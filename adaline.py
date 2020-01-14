@@ -49,10 +49,6 @@ predict = ms.ops.Step(output)
 # 损失函数
 loss = ms.ops.loss.PerceptionLoss(ms.ops.MatMul(label, output))
 
-# 梯度下降学习率
-learning_rate = 0.0001
-opt = ms.optimizer.GradientDescent(ms.default_graph, loss, 0.0001)
-
 
 # 训练执行50个epoch
 for epoch in range(50):
