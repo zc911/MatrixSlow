@@ -78,8 +78,10 @@ class PerceptionLoss(LossFunction):
 
     def get_jacobi(self, parent):
         """
-        雅克比矩阵为零方阵
+        雅克比矩阵为对角阵，每个对角线元素对应一个父节点元素。若父节点元素大于0，则
+        相应对角线元素（偏导数）为0，否则为-1。
         """
-        return np.zeros((self.dimension(), self.dimension()))
+        diag = np.where(parent.value >= 0.0, 0.0, -1)
+        return np.diag(diag.ravel())
 
 
