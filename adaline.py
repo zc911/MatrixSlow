@@ -111,6 +111,4 @@ for epoch in range(50):
     accuracy = (train_set[:,-1] == pred).astype(np.int).sum() / len(train_set)
        
     # 打印当前epoch数和模型在训练集上的正确率
-    print("epoch: {:d}, accuracy: {:.3f}".format(epoch + 1, accuracy))
-
-    
+    print("epoch: {:d}, accuracy: {:.3f}".format(epoch + 1, accuracy)) 
