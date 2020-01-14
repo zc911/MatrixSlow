@@ -1,25 +1,30 @@
 import numpy as np
 import matrixslow as ms
 
-# 制造训练样本
-male_heights = np.random.normal(171, 6, 500)  # 男性身高，根据均值171，标准差6的正态分布采样500个
-female_heights = np.random.normal(158, 5, 500)  # 女性身高，根据均值158，标准差5的正态分布采样500个
+"""
+制造训练样本。根据均值171，标准差6的正态分布采样500个男性身高，根据均值158，
+标准差5的正态分布采样500个女性身高。根据均值70，标准差10的正态分布采样500个
+男性体重，根据均值57，标准差8的正态分布采样500个女性体重。根据均值16，标准差
+2的正态分布采样500个男性体脂率，根据均值22，标准差2的正态分布采样500个女性体
+脂率。构造500个1，作为男性标签，构造500个-1，作为女性标签。将数据组装成一个
+1000x4的numpy数组，前3列分别是身高、体重和体脂率，最后一列是性别标签。
+"""
+male_heights = np.random.normal(171, 6, 500)
+female_heights = np.random.normal(158, 5, 500)
 
-male_weights = np.random.normal(70, 10, 500)  # 男性体重，根据均值70，标准差10的正态分布采样500个
-female_weights = np.random.normal(57, 8, 500)  # 女性体重，根据均值57，标准差8的正态分布采样500个
+male_weights = np.random.normal(70, 10, 500)
+female_weights = np.random.normal(57, 8, 500)
 
-male_bfrs = np.random.normal(16, 2, 500)  # 男性体脂率，根据均值16，标准差2的正态分布采样500个
-female_bfrs = np.random.normal(22, 2, 500)  # 女性体脂率，根据均值22，标准差2的正态分布采样500个
+male_bfrs = np.random.normal(16, 2, 500)
+female_bfrs = np.random.normal(22, 2, 500)
 
-male_labels = [1] * 500  # 男性标签，500个1
-female_labels = [-1] * 500   # 男性标签，500个-1
+male_labels = [1] * 500
+female_labels = [-1] * 500 
 
-
-# 将以上构造的数据组装成一个1000x4的numpy数组，前3列分别是身高、体重和体脂率，最后一列是性别标签
 train_set = np.array([np.concatenate((male_heights, female_heights)),
-                    np.concatenate((male_weights, female_weights)),
-                    np.concatenate((male_bfrs, female_bfrs)),
-                    np.concatenate((male_labels, female_labels))]).T
+                      np.concatenate((male_weights, female_weights)),
+                      np.concatenate((male_bfrs, female_bfrs)),
+                      np.concatenate((male_labels, female_labels))]).T
 
 # 随机打乱样本顺序
 np.random.shuffle(train_set)
