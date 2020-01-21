@@ -68,8 +68,7 @@ for epoch in range(50):
         
         # 在loss节点上执行前向传播，计算损失值
         loss.forward()
-        # print("epoch: {:d}, iteration: {:d}, loss: {:.3f}".format(epoch + 1, i + 1, loss.value[0, 0]))
-        
+       
         # 在w和b节点上执行反向传播，计算损失值对它们的雅可比矩阵
         w.backward(loss)
         b.backward(loss)
