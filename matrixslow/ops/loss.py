@@ -30,7 +30,10 @@ class LogLoss(LossFunction):
 
     def get_jacobi(self, parent):
         
-        return np.mat(-1 / (1 + np.power(np.e, np.where(parent.value > 1e2, 1e2, parent.value))))
+        x = parent.value
+        diag = -1 / (1 + np.power(np.e, np.where(x > 1e2, 1e2, x)))
+        
+        return np.diag(diag.ravel())
         
 
 
