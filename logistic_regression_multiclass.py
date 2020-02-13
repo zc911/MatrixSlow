@@ -95,7 +95,7 @@ for epoch in range(200):
         
         # 在模型的predict节点上执行前向传播
         predict.forward()
-        pred.append(predict.value.A.ravel())  # 模型的预测结果：1男，0女
+        pred.append(predict.value.A.ravel())  # 模型的预测结果：3个概率值
             
     pred = np.array(pred).argmax(axis=1)  # 取最大概率对应的类别为预测类别
     
