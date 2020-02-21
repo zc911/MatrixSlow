@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb 20 16:45:45 2020
+Created on Fri Feb 21 15:27:01 2020
 
-@author: zhangjuefei
+@author: chaos
 """
 
 import numpy as np
@@ -25,14 +25,8 @@ x = ms.core.Variable(dim=(784, 1), init=False, trainable=False)
 # One-Hot类别标签，是10x1矩阵
 one_hot = ms.core.Variable(dim=(10, 1), init=False, trainable=False)
 
-# 输入层，100个神经元，激活函数为ReLU
-hidden_1 = ms.layer.fc(x, 784, 100, "ReLU")
-
-# 隐藏层，20个神经元，激活函数为ReLU
-hidden_2 = ms.layer.fc(hidden_1, 100, 20, "ReLU")
-
 # 输出层，10个神经元，无激活函数
-output = ms.layer.fc(hidden_2, 20, 10, None)
+output = ms.layer.fc(x, 784, 10, None)
 
 # 概率输出
 predict = ms.ops.SoftMax(output)
@@ -50,7 +44,7 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 batch_size = 64
 
 # 训练执行10个epoch
-for epoch in range(10):
+for epoch in range(30):
     
     # 批计数器清零
     batch_count = 0
