@@ -289,7 +289,7 @@ class Flatten(Operator):
     def compute(self):
         assert len(self.parents) > 0
 
-        # 将所有负矩阵展平并连接成一个向量
+        # 将所有父节点矩阵展平并连接成一个向量
         self.value = np.concatenate(
             [p.value.flatten() for p in self.parents],
             axis=1
