@@ -7,111 +7,91 @@ Created on Thu Feb 27 17:54:09 2020
 
 import numpy as np
 import matrixslow as ms
+from sklearn.datasets import make_circles
 
-male_heights = np.random.normal(171, 6, 500)
-female_heights = np.random.normal(158, 5, 500)
+# 获取同心圆状分布的数据，X的每行包含两个特征，y是1/0类别标签
+X, y = make_circles(200, noise=0.1, factor=0.5)
+y = y * 2 - 1  # 将标签转化为1/-1
 
-male_weights = np.random.normal(70, 10, 500)
-female_weights = np.random.normal(57, 8, 500)
+# 是否使用二次项
+use_quadratic = True
 
-male_bfrs = np.random.normal(16, 2, 500)
-female_bfrs = np.random.normal(22, 2, 500)
+# 一次项，2维向量（2x1矩阵）
+x1 = ms.core.Variable(dim=(2, 1), init=False, trainable=False)
 
-male_labels = [1] * 500
-female_labels = [-1] * 500 
-
-train_set = np.array([np.concatenate((male_heights, female_heights)),
-                      np.concatenate((male_weights, female_weights)),
-                      np.concatenate((male_bfrs, female_bfrs)),
-                      np.concatenate((male_labels, female_labels))]).T
-
-# 随机打乱样本顺序
-np.random.shuffle(train_set)
-    
-
-# 构造计算图：输入向量，是一个3x1矩阵，不需要初始化，不参与训练
-x1 = ms.core.Variable(dim=(3, 1), init=False, trainable=False)
-x2 = ms.core.Variable(dim=(3, 1), init=False, trainable=False)
-
-# 类别标签，1男，-1女
+# 标签
 label = ms.core.Variable(dim=(1, 1), init=False, trainable=False)
 
-# 权重向量，是一个1x3矩阵，需要初始化，参与训练
-w1 = ms.core.Variable(dim=(2, 3), init=True, trainable=True)
-w2 = ms.core.Variable(dim=(2, 3), init=True, trainable=True)
-w = ms.core.Variable(dim=(1, 4), init=True, trainable=True)
-
-# 阈值，是一个1x1矩阵，需要初始化，参与训练
+# 偏置
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
 
-# ADALINE的预测输出
-x = ms.ops.Flatten(ms.ops.MatMul(w1, x1), ms.ops.MatMul(w2, x2))
+# 根据是否使用二次项区别处理
+if use_quadratic:
+
+    # 将一次项与自己的转置相乘，得到二次项2x2矩阵，再转成4维向量（4x1矩阵）
+    x2 = ms.ops.Reshape(
+            ms.ops.MatMul(x1, ms.ops.Reshape(x1, shape=(1, 2))),
+            shape=(4, 1)
+            )
+
+    # 将一次和二次特征连接成6维向量（6x1矩阵）
+    x = ms.ops.Concat(x1, x2)
+    
+    # 权值向量是6维（1x6矩阵）
+    w = ms.core.Variable(dim=(1, 6), init=True, trainable=True)
+    
+else:
+    
+    # 特征向量就是一次项
+    x = x1
+    
+    # 权值向量是2维（1x2矩阵）
+    w = ms.core.Variable(dim=(1, 2), init=True, trainable=True)
+
+
+# 线性部分
 output = ms.ops.Add(ms.ops.MatMul(w, x), b)
+
+# 预测概率
 predict = ms.ops.Logistic(output)
 
 # 损失函数
 loss = ms.ops.loss.LogLoss(ms.ops.Multiply(label, output))
 
-# 学习率
 learning_rate = 0.001
 
-# 构造Adam优化器
 optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
 
-# 批大小为8
 batch_size = 8
 
-# 训练执行50个epoch
-for epoch in range(50):
+for epoch in range(200):
     
-    # 批计数器清零
     batch_count = 0
     
-    # 遍历训练集中的样本
-    for i in range(len(train_set)):
+    for i in range(len(X)):
         
-        # 取第i个样本的前4列（除最后一列的所有列），构造3x1矩阵对象
-        features = np.mat(train_set[i,:-1]).T
+        x1.set_value(np.mat(X[i]).T)
+        label.set_value(np.mat(y[i]))
         
-        # 取第i个样本的最后一列，是该样本的性别标签（1男，-1女），构造1x1矩阵对象
-        l = np.mat(train_set[i,-1])
-        
-        # 将特征赋给x节点，将标签赋给label节点
-        x1.set_value(features)
-        x2.set_value(features)
-        label.set_value(l)
-        
-        # 调用优化器的one_step方法，执行一次前向传播和反向传播
         optimizer.one_step()
         
-        # 批计数器加1
         batch_count += 1
         
-        # 若批计数器大于等于批大小，则执行一次梯度下降更新，并清零计数器
         if batch_count >= batch_size:
-            # 优化器执行梯度下降更新
             optimizer.update()
             batch_count = 0
 
-    # 每个epoch结束后评价模型的正确率
     pred = []
-    
-    # 遍历训练集，计算当前模型对每个样本的预测值
-    for i in range(len(train_set)):
+    for i in range(len(X)):
                 
-        features = np.mat(train_set[i,:-1]).T
-        x1.set_value(features)
-        x2.set_value(features)
+        x1.set_value(np.mat(X[i]).T)
+        label.set_value(np.mat(y[i]))
         
-        # 在模型的predict节点上执行前向传播
         predict.forward()
-        pred.append(predict.value[0, 0])  # 模型的预测结果：1男，0女
+        pred.append(predict.value[0, 0])
             
-    pred = (np.array(pred) > 0.5).astype(np.int) * 2 - 1  # 将1/0结果转化成1/-1结果，好与训练标签的约定一致
+    pred = (np.array(pred) > 0.5).astype(np.int) * 2 - 1
     
-    # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
-    accuracy = (train_set[:,-1] == pred).astype(np.int).sum() / len(train_set)
-       
-    # 打印当前epoch数和模型在训练集上的正确率
+    accuracy = (y == pred).astype(np.int).sum() / len(X)
     print("epoch: {:d}, accuracy: {:.3f}".format(epoch + 1, accuracy))

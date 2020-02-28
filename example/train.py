@@ -139,7 +139,7 @@ def build_model(feature_num):
         pooling2 = pooling(conv2, (3, 3), (2, 2))  # 第二池化层
 
     with ms.name_scope('Hidden'):
-        fc1 = fc(Flatten(*pooling2), 294, 100, "ReLU")  # 第一全连接层
+        fc1 = fc(Concat(*pooling2), 294, 100, "ReLU")  # 第一全连接层
 
     with ms.name_scope('Logits'):
         logits = fc(fc1, 100, 10, "None")  # 第二全连接层

@@ -281,7 +281,7 @@ class MaxPooling(Operator):
         return self.flag
 
 
-class Flatten(Operator):
+class Concat(Operator):
     """
     将多个父节点的值连接成向量
     """
