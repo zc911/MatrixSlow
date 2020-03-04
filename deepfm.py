@@ -18,7 +18,7 @@ X, y = make_classification(200, dimension, n_informative=20)
 y = y * 2 - 1
 
 
-# 隐藏向量维度
+# 嵌入向量维度
 k = 20
 
 # 一次项

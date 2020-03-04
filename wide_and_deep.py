@@ -17,7 +17,7 @@ X, y = make_classification(200, dimension, n_informative=20)
 y = y * 2 - 1
 
 
-# 隐藏向量维度
+# 嵌入向量维度
 k = 20
 
 # 一次项
@@ -36,7 +36,7 @@ E = ms.core.Variable(dim=(k, dimension), init=True, trainable=True)
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
 
 
-# WIDE部分，一个简单的逻辑回归
+# Wide部分，一个简单的逻辑回归
 wide = ms.ops.Add(ms.ops.MatMul(w, x1), b)
 
 
