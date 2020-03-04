@@ -13,7 +13,7 @@ import matrixslow as ms
 dimension = 60
 
 # 构造二分类样本，有用特征占20维
-X, y = make_classification(200, dimension, n_informative=20)
+X, y = make_classification(600, dimension, n_informative=20)
 y = y * 2 - 1
 
 
@@ -36,8 +36,8 @@ E = ms.core.Variable(dim=(k, dimension), init=True, trainable=True)
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
 
 
-# Wide部分，一个简单的逻辑回归
-wide = ms.ops.Add(ms.ops.MatMul(w, x1), b)
+# Wide部分
+wide = ms.ops.MatMul(w, x1)
 
 
 # Deep部分
@@ -53,7 +53,7 @@ hidden_2 = ms.layer.fc(hidden_1, 8, 4, "ReLU")
 deep = ms.layer.fc(hidden_2, 4, 1, None)
 
 # 输出
-output = ms.ops.Add(wide, deep)
+output = ms.ops.Add(wide, deep, b)
 
 # 预测概率
 predict = ms.ops.Logistic(output)

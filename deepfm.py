@@ -14,7 +14,7 @@ import matrixslow as ms
 dimension = 60
 
 # 构造二分类样本，有用特征占20维
-X, y = make_classification(200, dimension, n_informative=20)
+X, y = make_classification(600, dimension, n_informative=20)
 y = y * 2 - 1
 
 
