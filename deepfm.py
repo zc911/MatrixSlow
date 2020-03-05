@@ -32,7 +32,6 @@ w = ms.core.Variable(dim=(1, dimension), init=True, trainable=True)
 
 # 嵌入矩阵
 E = ms.core.Variable(dim=(k, dimension), init=True, trainable=True)
-ETE = ms.ops.MatMul(ms.ops.Reshape(E, shape=(dimension, k)), E)
 
 # 偏置
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
@@ -42,12 +41,9 @@ embedding = ms.ops.MatMul(E, x1)
 
 
 # FM部分
-fm = ms.ops.Add(
-        ms.ops.MatMul(w, x1),   # 一次部分
-        
-        # 二次部分
-        ms.ops.MatMul(ms.ops.Reshape(embedding, shape=(1, k)), embedding),
-        b)
+fm = ms.ops.Add(ms.ops.MatMul(w, x1),   # 一次部分
+                # 二次部分
+                ms.ops.MatMul(ms.ops.Reshape(embedding, shape=(1, k)), embedding))
 
 
 # Deep部分，第一隐藏层
@@ -60,8 +56,7 @@ hidden_2 = ms.layer.fc(hidden_1, 8, 4, "ReLU")
 deep = ms.layer.fc(hidden_2, 4, 1, None)
 
 # 输出
-output = ms.ops.Add(deep, fm)
-# output = deep
+output = ms.ops.Add(deep, fm, b)
 
 # 预测概率
 predict = ms.ops.Logistic(output)
