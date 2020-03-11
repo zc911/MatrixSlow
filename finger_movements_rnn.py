@@ -35,7 +35,7 @@ label_test = ohe.fit_transform(le.fit_transform(test["classAttribute"]).reshape(
 # 构造RNN
 seq_len = 144  # 序列长度为50
 dimension = 9  # 输入维度
-status_dimension = 5  # 状态维度
+status_dimension = 20  # 状态维度
 
 # signal_train, label_train, signal_test, label_test = get_sequence_data(length=seq_len, dimension=dimension)
 
@@ -63,8 +63,8 @@ for iv in inputs:
     last_step = h
 
 
-fc1 = ms.layer.fc(h, status_dimension, 6, "ReLU")  # 第一全连接层
-output = ms.layer.fc(fc1, 6, 25, "None")  # 输出层
+fc1 = ms.layer.fc(h, status_dimension, 40, "ReLU")  # 第一全连接层
+output = ms.layer.fc(fc1, 40, 25, "None")  # 输出层
 
 # 概率
 predict = ms.ops.Logistic(output)
@@ -77,7 +77,7 @@ loss = ms.ops.CrossEntropyWithSoftMax(output, label)
 
 
 # 训练
-learning_rate = 0.005
+learning_rate = 0.001
 optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
 batch_size = 16
