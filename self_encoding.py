@@ -7,28 +7,27 @@ Created on Thu Mar  5 22:54:59 2020
 
 import numpy as np
 from sklearn.datasets import fetch_openml
-from sklearn.preprocessing import OneHotEncoder
 import matrixslow as ms
 
 # 加载MNIST数据集，只取5000个样本
 # X, _ = fetch_openml('mnist_784', version=1, return_X_y=True)
-# X = X[:5000] / 255
+X = X[:5000] / 255
 
 
 # 构造计算图：输入向量，是一个784x1矩阵，不需要初始化，不参与训练
 x = ms.core.Variable(dim=(784, 1), init=False, trainable=False)
 
 
-# hidden_1 = ms.layer.fc(x, 784, 100, "ReLU")
+hidden_1 = ms.layer.fc(x, 784, 100, "ReLU")
 
 
-encoding = ms.layer.fc(x, 784, 20, "ReLU")
+encoding = ms.layer.fc(hidden_1, 100, 40, "ReLU")
 
 
 # hidden_2 = ms.layer.fc(encoding, 20, 100, "ReLU")
 
 
-decoding = ms.layer.fc(encoding, 20, 784, "ReLU")
+decoding = ms.layer.fc(encoding, 40, 784, "ReLU")
 
 minus_one = ms.core.Variable(dim=(1, 1), init=False, trainable=False)
 minus_one.set_value(np.mat([[-1]]))
@@ -63,6 +62,9 @@ for epoch in range(30):
     
     # 批计数器清零
     batch_count = 0
+    
+    # 随机打乱
+    np.random.shuffle(X)
     
     # 遍历训练集中的样本
     for i in range(len(X)):

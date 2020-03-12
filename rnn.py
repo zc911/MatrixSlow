@@ -13,8 +13,8 @@ from scipy import signal
 
 import matrixslow as ms
 
-path_train = "D:/file/study/book/python_dl_framework/MatrixSlow/data/ArticularyWordRecognition/ArticularyWordRecognition_TRAIN.arff"
-path_test = "D:/file/study/book/python_dl_framework/MatrixSlow/data/ArticularyWordRecognition/ArticularyWordRecognition_TEST.arff"
+path_train = "data/ArticularyWordRecognition/ArticularyWordRecognition_TRAIN.arff"
+path_test = "data/ArticularyWordRecognition/ArticularyWordRecognition_TEST.arff"
 
 
 # 读取arff格式数据
@@ -49,11 +49,11 @@ U = ms.core.Variable(dim=(status_dimension, dimension), init=True, trainable=Tru
 W = ms.core.Variable(dim=(status_dimension, status_dimension), init=True, trainable=True)
 
 # 偏置向量
-# b = ms.core.Variable(dim=(status_dimension, 1), init=True, trainable=True)
+b = ms.core.Variable(dim=(status_dimension, 1), init=True, trainable=True)
 
 last_step = None  # 上一步的输出，第一步没有上一步，先将其置为 None
 for iv in inputs:
-    h = ms.ops.Add(ms.ops.MatMul(U, iv))
+    h = ms.ops.Add(ms.ops.MatMul(U, iv), b)
 
     if last_step is not None:
         h = ms.ops.Add(ms.ops.MatMul(W, last_step), h)
@@ -77,10 +77,10 @@ loss = ms.ops.CrossEntropyWithSoftMax(output, label)
 
 
 # 训练
-learning_rate = 0.001
+learning_rate = 0.002
 optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
-batch_size = 16
+batch_size = 64
 
 for epoch in range(500):
     
@@ -121,6 +121,22 @@ for epoch in range(500):
     
     # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
     accuracy = (true == pred).astype(np.int).sum() / len(signal_test)
+    
+    pred = []
+    for i, s in enumerate(signal_train):
+                
+        # 将每个样本50个时刻的向量赋给相应变量
+        for j, x in enumerate(inputs):
+            x.set_value(np.mat(s[j]).T)
+
+        predict.forward()
+        pred.append(predict.value.A.ravel())
+            
+    pred = np.array(pred).argmax(axis=1)
+    true = label_train.argmax(axis=1)
+    
+    # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
+    train_accuracy = (true == pred).astype(np.int).sum() / len(signal_test)
        
     # 打印当前epoch数和模型在训练集上的正确率
-    print("epoch: {:d}, accuracy: {:.3f}".format(epoch + 1, accuracy))
+    print("epoch: {:d}, accuracy: {:.5f}, train accuracy: {:.5f}".format(epoch + 1, accuracy, train_accuracy))
