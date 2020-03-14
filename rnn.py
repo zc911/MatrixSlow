@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 from scipy.io import arff
-from scipy import signal
 
 import matrixslow as ms
 
@@ -33,7 +32,7 @@ label_test = ohe.fit_transform(le.fit_transform(test["classAttribute"]).reshape(
 
 
 # 构造RNN
-seq_len = 144  # 序列长度为50
+seq_len = 144  # 序列长度
 dimension = 9  # 输入维度
 status_dimension = 20  # 状态维度
 
@@ -80,7 +79,7 @@ loss = ms.ops.CrossEntropyWithSoftMax(output, label)
 learning_rate = 0.002
 optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
-batch_size = 64
+batch_size = 32
 
 for epoch in range(500):
     
@@ -109,7 +108,7 @@ for epoch in range(500):
     pred = []
     for i, s in enumerate(signal_test):
                 
-        # 将每个样本50个时刻的向量赋给相应变量
+        # 将每个样本各个时刻的向量赋给相应变量
         for j, x in enumerate(inputs):
             x.set_value(np.mat(s[j]).T)
 

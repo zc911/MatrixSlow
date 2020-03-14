@@ -22,7 +22,7 @@ class Node(object):
         self.need_save = kargs.get('need_save', True)
         self.gen_node_name(**kargs)
 
-        self.parents = parents  # 父节点列表
+        self.parents = list(parents)  # 父节点列表
         self.children = []  # 子节点列表
         self.value = None  # 本节点的值
         self.jacobi = None  # 结果节点对本节点的雅可比矩阵
