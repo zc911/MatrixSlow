@@ -20,7 +20,7 @@ path_test = "data/ArticularyWordRecognition/ArticularyWordRecognition_TEST.arff"
 train, test = arff.loadarff(path_train), arff.loadarff(path_test)
 train, test = pd.DataFrame(train[0]), pd.DataFrame(test[0])
 
-# 整理数据格式，结果为316x50x28数组：316个样本，每个样本有50个时刻，每个时刻是28个信号
+# 整理数据格式，每个样本是144x9的数组，序列共144个时刻，每个时刻9个值
 signal_train = np.array([np.array([list(channel) for channel in sample]).T for sample in train["relationalAtt"]])
 signal_test = np.array([np.array([list(channel) for channel in sample]).T for sample in test["relationalAtt"]])
 
@@ -35,8 +35,6 @@ label_test = ohe.fit_transform(le.fit_transform(test["classAttribute"]).reshape(
 seq_len = 144  # 序列长度
 dimension = 9  # 输入维度
 status_dimension = 20  # 状态维度
-
-# signal_train, label_train, signal_test, label_test = get_sequence_data(length=seq_len, dimension=dimension)
 
 # 50个输入向量节点
 inputs = [ms.core.Variable(dim=(dimension, 1), init=False, trainable=False) for i in range(seq_len)]

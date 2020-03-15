@@ -80,27 +80,8 @@ for iv in inputs:
     hiddens.append(last_step)
 
 
-# 焊接点
-welding_point = ms.ops.Concat(last_step)
-
-# 焊接小函数
-def weld(input_node):
-    """
-    将焊接点连到输入节点上
-    """
-    
-    global welding_point
-    
-    # 首先将焊接点与之前的父节点断开
-    
-    if welding_point.parents[0] is not None:
-        welding_point.parents[0].children.remove(welding_point)
-    
-    welding_point.parents.clear()
-    
-    # 将焊接点新的输入节点焊接
-    welding_point.parents.append(input_node)
-    input_node.children.append(welding_point)
+# 焊接点，暂时不连接父节点
+welding_point = ms.ops.Welding()
 
 
 # 全连接网络
@@ -139,7 +120,7 @@ for epoch in range(10):
             inputs[j].set_value(np.mat(s[j]).T)    
         
         # 将临时的最后一个时刻与全连接网络焊接
-        weld(hiddens[j])
+        welding_point.weld(hiddens[j])
         
         label.set_value(np.mat(label_train[i, :]).T)
         
@@ -165,7 +146,7 @@ for epoch in range(10):
         for j in range(len(s)):
             inputs[j].set_value(np.mat(s[j]).T)    
         
-        weld(hiddens[j])
+        welding_point.weld(hiddens[j])
 
         predict.forward()
         pred.append(predict.value.A.ravel())
