@@ -36,7 +36,7 @@ seq_len = 144  # 序列长度
 dimension = 9  # 输入维度
 status_dimension = 20  # 状态维度
 
-# 50个输入向量节点
+# 144个输入向量节点
 inputs = [ms.core.Variable(dim=(dimension, 1), init=False, trainable=False) for i in range(seq_len)]
  
 # 输入权值矩阵
@@ -48,7 +48,7 @@ W = ms.core.Variable(dim=(status_dimension, status_dimension), init=True, traina
 # 偏置向量
 b = ms.core.Variable(dim=(status_dimension, 1), init=True, trainable=True)
 
-last_step = None  # 上一步的输出，第一步没有上一步，先将其置为 None
+last_step = None  # 上一步的输出，第一步没有上一步，先将其置为None
 for iv in inputs:
     h = ms.ops.Add(ms.ops.MatMul(U, iv), b)
 
@@ -84,7 +84,6 @@ for epoch in range(500):
     batch_count = 0   
     for i, s in enumerate(signal_train):
         
-        # 将每个样本50个时刻的向量赋给相应变量
         for j, x in enumerate(inputs):
             x.set_value(np.mat(s[j]).T)
         
@@ -105,8 +104,7 @@ for epoch in range(500):
     
     pred = []
     for i, s in enumerate(signal_test):
-                
-        # 将每个样本各个时刻的向量赋给相应变量
+        
         for j, x in enumerate(inputs):
             x.set_value(np.mat(s[j]).T)
 
@@ -116,13 +114,12 @@ for epoch in range(500):
     pred = np.array(pred).argmax(axis=1)
     true = label_test.argmax(axis=1)
     
-    # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
+    # 测试集正确率
     accuracy = (true == pred).astype(np.int).sum() / len(signal_test)
     
     pred = []
     for i, s in enumerate(signal_train):
-                
-        # 将每个样本50个时刻的向量赋给相应变量
+        
         for j, x in enumerate(inputs):
             x.set_value(np.mat(s[j]).T)
 
@@ -132,8 +129,7 @@ for epoch in range(500):
     pred = np.array(pred).argmax(axis=1)
     true = label_train.argmax(axis=1)
     
-    # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
+    # 训练集正确率
     train_accuracy = (true == pred).astype(np.int).sum() / len(signal_test)
        
-    # 打印当前epoch数和模型在训练集上的正确率
     print("epoch: {:d}, accuracy: {:.5f}, train accuracy: {:.5f}".format(epoch + 1, accuracy, train_accuracy))

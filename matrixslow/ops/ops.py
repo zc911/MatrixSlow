@@ -355,7 +355,7 @@ class Welding(Operator):
     
     def weld(self, node):
         """
-        将本节点焊接到到输入节点上
+        将本节点焊接到输入节点上
         """
         
         # 首先与之前的父节点断开
