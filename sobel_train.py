@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+tiqu # -*- coding: utf-8 -*-
 """
 Created on Fri Mar 20 11:34:01 2020
 
@@ -19,7 +19,7 @@ w, h = 128, 128
 sobel = ms.core.Variable(dim=(3, 3), init=False, trainable=False)
 sobel.set_value(np.mat([[1, 0, -1], [2, 0, -2], [1, 0, -1]]))
 
-# 输入图像,蒙德里安作品
+# 输入图像
 lena_img = ms.core.Variable(dim=(w, h), init=False, trainable=False)
 lena_img.set_value(np.mat(lena))
 
