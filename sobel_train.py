@@ -1,4 +1,4 @@
-tiqu # -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Created on Fri Mar 20 11:34:01 2020
 
@@ -7,24 +7,25 @@ Created on Fri Mar 20 11:34:01 2020
 
 import matrixslow as ms
 import numpy as np
-import skimage
 import matplotlib.pyplot as plt
+import matplotlib
 
-lena = skimage.io.imread('data/lena.jpg') / 255
+# 读取图像，归一化
+pic = matplotlib.image.imread('data/lena.jpg') / 255
 
 # 图像尺寸
-w, h = 128, 128
+w, h = w, h = pic.shape
 
 # Sobel滤波器
 sobel = ms.core.Variable(dim=(3, 3), init=False, trainable=False)
 sobel.set_value(np.mat([[1, 0, -1], [2, 0, -2], [1, 0, -1]]))
 
 # 输入图像
-lena_img = ms.core.Variable(dim=(w, h), init=False, trainable=False)
-lena_img.set_value(np.mat(lena))
+img = ms.core.Variable(dim=(w, h), init=False, trainable=False)
+img.set_value(np.mat(pic))
 
 # Sobel滤波器输出
-sobel_output = ms.ops.Convolve(lena_img, sobel)
+sobel_output = ms.ops.Convolve(img, sobel)
 
 # 输出图像
 sobel_output.forward()
@@ -32,7 +33,7 @@ plt.imshow(sobel_output.value, cmap="gray")
 
 # 可训练滤波器
 filter_train = ms.core.Variable(dim=(3, 3), init=True, trainable=True)
-filter_output = ms.ops.Convolve(lena_img, filter_train)
+filter_output = ms.ops.Convolve(img, filter_train)
 
 # 常数矩阵：-1
 minus = ms.core.Variable(dim=(w, h), init=False, trainable=False)

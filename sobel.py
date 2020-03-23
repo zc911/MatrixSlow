@@ -11,10 +11,10 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 # 读取图像，归一化
-lena = matplotlib.image.imread('data/mondrian.jpg') / 255
+pic = matplotlib.image.imread('data/mondrian.jpg') / 255
 
 # 图像尺寸
-w, h = lena.shape
+w, h = pic.shape
 
 # 纵向Sobel滤波器
 sobel_v = ms.core.Variable(dim=(3, 3), init=False, trainable=False)
@@ -25,12 +25,12 @@ sobel_h = ms.core.Variable(dim=(3, 3), init=False, trainable=False)
 sobel_h.set_value(sobel_v.value.T)
 
 # 输入图像
-lena_img = ms.core.Variable(dim=(w, h), init=False, trainable=False)
-lena_img.set_value(np.mat(lena))
+img = ms.core.Variable(dim=(w, h), init=False, trainable=False)
+img.set_value(np.mat(pic))
 
 # Sobel滤波器输出
-sobel_v_output = ms.ops.Convolve(lena_img, sobel_v)
-sobel_h_output = ms.ops.Convolve(lena_img, sobel_h)
+sobel_v_output = ms.ops.Convolve(img, sobel_v)
+sobel_h_output = ms.ops.Convolve(img, sobel_h)
 
 # 两个Sobel滤波器的输出平方和
 square_output = ms.ops.Add(
@@ -45,7 +45,7 @@ square_output.forward()
 fig = plt.figure(figsize=(6, 6))
 ax = fig.add_subplot(221)
 ax.axis("off")
-ax.imshow(lena_img.value, cmap="gray")
+ax.imshow(img.value, cmap="gray")
 
 ax = fig.add_subplot(222)
 ax.axis("off")
