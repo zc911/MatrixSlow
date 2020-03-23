@@ -14,7 +14,7 @@ import matplotlib
 pic = matplotlib.image.imread('data/lena.jpg') / 255
 
 # 图像尺寸
-w, h = w, h = pic.shape
+w, h = pic.shape
 
 # Sobel滤波器
 sobel = ms.core.Variable(dim=(3, 3), init=False, trainable=False)
