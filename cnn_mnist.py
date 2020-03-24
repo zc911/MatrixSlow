@@ -54,7 +54,7 @@ loss = ms.ops.loss.CrossEntropyWithSoftMax(output, one_hot)
 # 学习率
 learning_rate = 0.005
 
-# 构造优化器
+# 优化器
 optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
 # 批大小
