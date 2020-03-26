@@ -162,7 +162,7 @@ class Multiply(Operator):
 
 class Convolve(Operator):
     """
-    以第二个父节点的值为卷积核，对第一个父节点的值做二维离散卷积
+    以第二个父节点的值为滤波器，对第一个父节点的值做二维离散卷积
     """
 
     def __init__(self, *parents, **kargs):
@@ -173,12 +173,12 @@ class Convolve(Operator):
 
     def compute(self):
 
-        data = self.parents[0].value  # 输入特征图
-        kernel = self.parents[1].value  # 卷积核
+        data = self.parents[0].value  # 图像
+        kernel = self.parents[1].value  # 滤波器
 
-        w, h = data.shape  # 输入特征图的宽和高
-        kw, kh = kernel.shape  # 卷积核尺寸
-        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+        w, h = data.shape  # 图像的宽和高
+        kw, kh = kernel.shape  # 滤波器尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 滤波器长宽的一半
 
         # 补齐数据边缘
         pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
@@ -195,12 +195,12 @@ class Convolve(Operator):
 
     def get_jacobi(self, parent):
 
-        data = self.parents[0].value  # 输入特征图
-        kernel = self.parents[1].value  # 卷积核
+        data = self.parents[0].value  # 图像
+        kernel = self.parents[1].value  # 滤波器
 
-        w, h = data.shape  # 输入特征图的宽和高
-        kw, kh = kernel.shape  # 卷积核尺寸
-        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+        w, h = data.shape  # 图像的宽和高
+        kw, kh = kernel.shape  # 滤波器尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 滤波器长宽的一半
 
         # 补齐数据边缘
         pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
