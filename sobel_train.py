@@ -56,12 +56,12 @@ mse = ms.ops.MatMul(square_error, n)
 optimizer = ms.optimizer.Adam(ms.core.default_graph, mse, 0.01)
 
 # 训练
-for i in range(500):
+for i in range(1000):
     
     optimizer.one_step()
     optimizer.update()               
     mse.forward()
-    print("iteration:{:d},loss:{:.6f}".format(i, mse.value[0, 0]))
+    print("iteration:{:d},loss:{:.10f}".format(i, mse.value[0, 0]))
 
 
 # 被训练完成的滤波器
