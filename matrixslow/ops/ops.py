@@ -162,7 +162,7 @@ class Multiply(Operator):
 
 class Convolve(Operator):
     """
-    以第二个父节点的值为卷积核，对第一个父节点的值做二维离散卷积
+    以第二个父节点的值为滤波器，对第一个父节点的值做二维离散卷积
     """
 
     def __init__(self, *parents, **kargs):
@@ -173,12 +173,12 @@ class Convolve(Operator):
 
     def compute(self):
 
-        data = self.parents[0].value  # 输入特征图
-        kernel = self.parents[1].value  # 卷积核
+        data = self.parents[0].value  # 图像
+        kernel = self.parents[1].value  # 滤波器
 
-        w, h = data.shape  # 输入特征图的宽和高
-        kw, kh = kernel.shape  # 卷积核尺寸
-        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+        w, h = data.shape  # 图像的宽和高
+        kw, kh = kernel.shape  # 滤波器尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 滤波器长宽的一半
 
         # 补齐数据边缘
         pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
@@ -195,12 +195,12 @@ class Convolve(Operator):
 
     def get_jacobi(self, parent):
 
-        data = self.parents[0].value  # 输入特征图
-        kernel = self.parents[1].value  # 卷积核
+        data = self.parents[0].value  # 图像
+        kernel = self.parents[1].value  # 滤波器
 
-        w, h = data.shape  # 输入特征图的宽和高
-        kw, kh = kernel.shape  # 卷积核尺寸
-        hkw, hkh = int(kw / 2), int(kh / 2)  # 卷积核长宽的一半
+        w, h = data.shape  # 图像的宽和高
+        kw, kh = kernel.shape  # 滤波器尺寸
+        hkw, hkh = int(kw / 2), int(kh / 2)  # 滤波器长宽的一半
 
         # 补齐数据边缘
         pw, ph = tuple(np.add(data.shape, np.multiply((hkw, hkh), 2)))
@@ -281,7 +281,7 @@ class MaxPooling(Operator):
         return self.flag
 
 
-class Flatten(Operator):
+class Concat(Operator):
     """
     将多个父节点的值连接成向量
     """
@@ -289,7 +289,7 @@ class Flatten(Operator):
     def compute(self):
         assert len(self.parents) > 0
 
-        # 将所有负矩阵展平并连接成一个向量
+        # 将所有父节点矩阵展平并连接成一个向量
         self.value = np.concatenate(
             [p.value.flatten() for p in self.parents],
             axis=1
@@ -339,3 +339,32 @@ class Step(Operator):
     def get_jacobi(self, parent):
         np.mat(np.eye(self.dimension()))
         return np.zeros(np.where(self.parents[0].value.A1 >= 0.0, 0.0, -1.0))
+    
+
+class Welding(Operator):
+    
+    def compute(self):
+        
+        assert len(self.parents) == 1 and self.parents[0] is not None
+        self.value = self.parents[0].value
+    
+    def get_jacobi(self, parent):
+        
+        assert parent is self.parents[0]
+        return np.mat(np.eye(self.dimension()))
+    
+    def weld(self, node):
+        """
+        将本节点焊接到输入节点上
+        """
+        
+        # 首先与之前的父节点断开
+        
+        if len(self.parents) == 1 and self.parents[0] is not None:
+            self.parents[0].children.remove(self)
+        
+        self.parents.clear()
+        
+        # 与输入节点焊接
+        self.parents.append(node)
+        node.children.append(self)

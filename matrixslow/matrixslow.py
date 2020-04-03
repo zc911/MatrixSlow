@@ -7,11 +7,11 @@ Created on Fri Jul 26 10:00:02 CST 2019
 
 
 from . import core
-from . import dist
+# from . import dist
 from . import layer
 from . import ops
 from . import optimizer
-from . import trainer
+# from . import trainer
 
 default_graph = core.default_graph
 get_node_from_graph = core.get_node_from_graph
