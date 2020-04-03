@@ -18,6 +18,9 @@ class Optimizer(object):
     """
 
     def __init__(self, graph, target, learning_rate=0.01):
+        """
+        优化器的构造函数接收一个计算图，计算图中的目标节点，以及学习率超参
+        """
         assert isinstance(target, Node) and isinstance(graph, Graph)
         self.graph = graph
         self.target = target

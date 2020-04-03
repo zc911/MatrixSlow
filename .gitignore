@@ -1,4 +1,5 @@
 dataset
+**vscode**
 *.pyc
 *pycache*
 *.pkl
