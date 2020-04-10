@@ -120,9 +120,10 @@ class SoftMax(Operator):
 
     def get_jacobi(self, parent):
         """
-        我们不实现SoftMax节点的get_jacobi函数，训练时使用CrossEntropyWithSoftMax节点（见下）
+        我们不实现SoftMax节点的get_jacobi函数，
+        训练时使用CrossEntropyWithSoftMax节点
         """
-        return np.mat(np.eye(self.dimension()))  # 无用
+        raise NotImplementedError("Don't use SoftMax's get_jacobi")
 
 
 class Reshape(Operator):
