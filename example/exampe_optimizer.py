@@ -1,7 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+@Author: chenzhen
+@Date: 2020-04-03 16:50:34
+@LastEditTime: 2020-04-03 19:38:33
+@LastEditors: chenzhen
+@Description:
+'''
 import sys
-sys.path.append('../..')
-import numpy as np
+sys.path.append('../')
 import matrixslow as ms
+import numpy as np
+
 
 """
 制造训练样本。根据均值171，标准差6的正态分布采样500个男性身高，根据均值158，
@@ -51,8 +61,11 @@ predict = ms.ops.Step(output)
 # 损失函数
 loss = ms.ops.loss.PerceptionLoss(ms.ops.MatMul(label, output))
 
+
 # 学习率
 learning_rate = 0.0001
+
+optimizer = ms.optimizer.GradientDescent(ms.default_graph, loss, learning_rate)
 
 # 训练执行50个epoch
 for epoch in range(50):
@@ -69,6 +82,9 @@ for epoch in range(50):
         # 将特征赋给x节点，将标签赋给label节点
         x.set_value(features)
         label.set_value(l)
+
+        # optimizer.one_step()
+        # optimizer.update()
 
         # 在loss节点上执行前向传播，计算损失值
         loss.forward()

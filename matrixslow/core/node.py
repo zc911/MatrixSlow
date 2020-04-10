@@ -17,6 +17,7 @@ class Node(object):
     """
 
     def __init__(self, *parents, **kargs):
+
         # 计算图对象，默认为全局对象default_graph
         self.graph = kargs.get('graph', default_graph)
         self.need_save = kargs.get('need_save', True)
@@ -48,8 +49,7 @@ class Node(object):
 
     def gen_node_name(self, **kargs):
         """
-        生成节点名称
-        如果用户不指定，则根据节点类型生成类似于"MatMul:3"的节点名
+        生成节点名称，如果用户不指定，则根据节点类型生成类似于"MatMul:3"的节点名，
         如果指定了name_scope，则生成类似"Hidden/MatMul:3"的节点名
         """
         self.name = kargs.get('name', '{}:{}'.format(
@@ -92,8 +92,7 @@ class Node(object):
 
                 for child in self.get_children():
                     if child.value is not None:
-                        self.jacobi += child.backward(result) * \
-                            child.get_jacobi(self)
+                        self.jacobi += child.backward(result) * child.get_jacobi(self)
 
         return self.jacobi
 
@@ -105,7 +104,7 @@ class Node(object):
 
     def dimension(self):
         """
-        返回本节点的值展平成向量后的维数。展平方式固定式按行排列成一列。
+        返回本节点的值展平成向量后的维数
         """
         return self.value.shape[0] * self.value.shape[1]
 
@@ -129,12 +128,12 @@ class Node(object):
 
 class Variable(Node):
     """
-    变（向）量节点
+    变量节点
     """
 
     def __init__(self, dim, init=False, trainable=True, **kargs):
         """
-        变量节点没有父节点，构造函数接受变量的维数，以及变量是否参与训练的标识
+        变量节点没有父节点，构造函数接受变量的形状，是否初始化以及是否参与训练的标识
         """
         Node.__init__(self,  **kargs)
         self.dim = dim

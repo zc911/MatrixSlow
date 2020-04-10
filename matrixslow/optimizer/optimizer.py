@@ -18,6 +18,9 @@ class Optimizer(object):
     """
 
     def __init__(self, graph, target, learning_rate=0.01):
+        """
+        优化器的构造函数接收一个计算图，计算图中的目标节点，以及学习率超参
+        """
         assert isinstance(target, Node) and isinstance(graph, Graph)
         self.graph = graph
         self.target = target
@@ -142,8 +145,9 @@ class Momentum(Optimizer):
                 if node not in self.v:
                     self.v[node] = gradient
                 else:
-                    self.v[node] = self.momentum * \
-                        self.v[node] + self.learning_rate * gradient
+                    # 动量参数乘以历史
+                    self.v[node] = self.momentum * self.v[node] \
+                        + self.learning_rate * gradient
                 node.set_value(node.value - self.v[node])
 
 
@@ -152,10 +156,9 @@ class AdaGrad(Optimizer):
     AdaGrad优化器
     '''
 
-    def __init__(self, graph, target, learning_rate=0.01, beta=0.9):
+    def __init__(self, graph, target, learning_rate=0.01):
         Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
-        self.beta = 0.9
 
         self.s = dict()
 
@@ -163,12 +166,12 @@ class AdaGrad(Optimizer):
         for node in self.graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 gradient = self.get_gradient(node)
-
+                # 保存梯度的平方和
                 if node not in self.s:
                     self.s[node] = np.power(gradient, 2)
                 else:
                     self.s[node] = self.s[node] + np.power(gradient, 2)
-
+                # 通过求历史平方和的开方的倒数，动态调整学习率
                 node.set_value(node.value - self.learning_rate *
                                gradient / (np.sqrt(self.s[node] + 1e-10)))
 
@@ -181,7 +184,7 @@ class RMSProp(Optimizer):
     def __init__(self, graph, target, learning_rate=0.01, beta=0.9):
         Optimizer.__init__(self, graph, target)
         self.learning_rate = learning_rate
-
+        # 新的超参 beta
         assert 0.0 < beta < 1.0
         self.beta = beta
 
@@ -195,9 +198,10 @@ class RMSProp(Optimizer):
                 if node not in self.s:
                     self.s[node] = np.power(gradient, 2)
                 else:
+                    # 通过 beta 超参求加权平方
                     self.s[node] = self.beta * self.s[node] + \
                         (1 - self.beta) * np.power(gradient, 2)
-
+                # 与AdaGrad完全一致
                 node.set_value(node.value - self.learning_rate *
                                gradient / (np.sqrt(self.s[node] + 1e-10)))
 
@@ -216,9 +220,10 @@ class Adam(Optimizer):
 
         assert 0.0 < beta_2 < 1.0
         self.beta_2 = beta_2
-
-        self.s = dict()
+        # 一阶梯度累积
         self.v = dict()
+        # 二阶梯度累积
+        self.s = dict()
 
     def _update(self):
 
@@ -230,10 +235,11 @@ class Adam(Optimizer):
                     self.v[node] = gradient
                     self.s[node] = np.power(gradient, 2)
                 else:
+                    # 梯度累积
                     self.v[node] = self.beta_1 * self.v[node] + \
                         (1 - self.beta_1) * gradient
                     self.s[node] = self.beta_2 * self.s[node] + \
                         (1 - self.beta_2) * np.power(gradient, 2)
-
+                # 更新参数
                 node.set_value(node.value - self.learning_rate *
                                self.v[node] / np.sqrt(self.s[node] + 1e-10))

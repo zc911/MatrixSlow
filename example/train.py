@@ -167,8 +167,8 @@ def save():
 def train(train_x, train_y, test_x, test_y, epoches, batch_size, mode, worker_index=None):
 
     # x, logits, w, b = build_model(FEATURE_DIM)
-    # x, logits = build_simple_model(FEATURE_DIM)
-    x, logits = multilayer_perception(FEATURE_DIM, CLASSES, [100, 100, ], "ReLU")
+    x, logits = build_simple_model(FEATURE_DIM)
+    # x, logits = multilayer_perception(FEATURE_DIM, CLASSES, [100, 100, ], "ReLU")
 
     y = ms.Variable((CLASSES, 1), init=False,
                     trainable=False, name='placeholder_y')
@@ -263,10 +263,10 @@ def inference_without_building_model(test_x, test_y):
 
 
 FEATURE_DIM = 784
-TOTAL_EPOCHES = 20
+TOTAL_EPOCHES = 1
 BATCH_SIZE = 32
-HIDDEN1_SIZE = 200
-HIDDEN2_SIZE = 100
+HIDDEN1_SIZE = 20
+HIDDEN2_SIZE = 10
 CLASSES = 10
 
 
@@ -325,7 +325,7 @@ if __name__ == '__main__':
             save()
 
         elif phase == 'eval':
-            inference_after_building_model(test_x, test_y)
-            # inference_without_building_model(test_x, test_y)
+            # inference_after_building_model(test_x, test_y)
+            inference_without_building_model(test_x, test_y)
         else:
             print('Usage: ./{} train|eval'.format(sys.argv[0]))

@@ -3,6 +3,8 @@ sys.path.append('../..')
 import numpy as np
 import matrixslow as ms
 
+
+
 """
 制造训练样本。根据均值171，标准差6的正态分布采样500个男性身高，根据均值158，
 标准差5的正态分布采样500个女性身高。根据均值70，标准差10的正态分布采样500个
@@ -52,7 +54,17 @@ predict = ms.ops.Step(output)
 loss = ms.ops.loss.PerceptionLoss(ms.ops.MatMul(label, output))
 
 # 学习率
-learning_rate = 0.0001
+learning_rate = 0.01
+
+# 使用各种优化器
+# optimizer = ms.optimizer.GradientDescent(ms.default_graph, loss, learning_rate)
+# optimizer = ms.optimizer.Momentum(ms.default_graph, loss, learning_rate)
+# optimizer = ms.optimizer.AdaGrad(ms.default_graph, loss, learning_rate)
+# optimizer = ms.optimizer.RMSProp(ms.default_graph, loss, learning_rate)
+optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
+
+mini_batch_size = 8
+cur_batch_size = 0
 
 # 训练执行50个epoch
 for epoch in range(50):
@@ -70,26 +82,14 @@ for epoch in range(50):
         x.set_value(features)
         label.set_value(l)
 
-        # 在loss节点上执行前向传播，计算损失值
-        loss.forward()
+        # 优化器执行一次前向传播和一次后向传播
+        optimizer.one_step()
+        cur_batch_size += 1
+        # 当积累到一个mini batch的时候，完成一次参数更新
+        if (cur_batch_size == mini_batch_size):
+            optimizer.update()
+            cur_batch_size = 0
 
-        # 在w和b节点上执行反向传播，计算损失值对它们的雅可比矩阵
-        w.backward(loss)
-        b.backward(loss)
-
-        """
-        用损失值对w和b的雅可比矩阵（梯度的转置）更新参数值。我们想优化的节点
-        都应该是标量节点（才有所谓降低其值一说），它对变量节点的雅可比矩阵的
-        形状都是1 x n。这个雅可比的转置是结果节点对变量节点的梯度。将梯度再
-        reshape成变量矩阵的形状，对应位置上就是结果节点对变量元素的偏导数。
-        将改变形状后的梯度乘上学习率，从当前变量值中减去，再赋值给变量节点，
-        完成梯度下降更新。
-        """
-        w.set_value(w.value - learning_rate * w.jacobi.T.reshape(w.shape()))
-        b.set_value(b.value - learning_rate * b.jacobi.T.reshape(b.shape()))
-
-        # default_graph对象保存了所有节点，调用clear_jacobi方法清除所有节点的雅可比矩阵
-        ms.default_graph.clear_jacobi()
 
     # 每个epoch结束后评价模型的正确率
     pred = []
