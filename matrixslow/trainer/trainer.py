@@ -22,16 +22,25 @@ class Trainer(object):
                  loss_op, optimizer,
                  epoches, batch_size=8,
                  eval_on_train=False, metrics_ops=None, *args, **kargs):
+        # 计算图的输入节点，或者叫feature节点
         self.input_x = input_x
+        # 计算图的label节点
         self.input_y = input_y
+        # 计算图的输出节点
         self.logits = logits
+        # 损失函数
         self.loss_op = loss_op
+        # 优化器
         self.optimizer = optimizer
 
+        # 训练执行的epoch次数
         self.epoches = epoches
         self.epoch = 0
+        # mini batch大小
         self.batch_size = batch_size
+        # 是否在训练迭代中同时评估
         self.eval_on_train = eval_on_train
+        # 评估指标列表
         self.metrics_ops = metrics_ops
 
         self.print_iteration_interval = kargs.get(
@@ -48,7 +57,7 @@ class Trainer(object):
         '''
         执行一次前向计算和一次后向计算(可能)
         '''
-        self.input_x.set_value(np.mat(data_x).T)
+        self.input_x.set_value(np.mat(data_x).reshape(self.input_x.dim).T)
         self.input_y.set_value(np.mat(data_y).T)
 
         self.optimizer.one_step()
@@ -120,6 +129,5 @@ class Trainer(object):
         # 初始化权值变量
         self._variable_weights_init()
         print('[INIT] Variable weights init finished')
-        var_weights_dict = dict()
         # 传入数据，开始主循环
         self.main_loop(train_x, train_y, test_x, test_y)
