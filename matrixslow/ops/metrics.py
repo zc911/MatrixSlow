@@ -6,7 +6,7 @@ Created on Wed Jul 10 17:34:46 CST 2019
 """
 
 import numpy as np
-
+import abc
 from ..core import Node
 
 
@@ -19,15 +19,26 @@ class Metrics(Node):
         # 默认情况下，metrics节点不需要保存
         kargs['need_save'] = kargs.get('need_save', False)
         Node.__init__(self, *parents, **kargs)
+        # 初始化节点
+        self.init()
+
+    def reset(self):
+        self.reset_value()
+        self.init()
+
+    @abc.abstractmethod
+    def init(self):
+        # 如何初始化节点由具体子类实现
+        pass
 
     @staticmethod
-    def prob_to_label(prob, thresholds=0.5):
+    def prob_to_label(prob, thresholds=0.0):
         if prob.shape[0] > 1:
             # 如果是多分类，预测值为概率最大的标签
             labels = np.argmax(prob, axis=0)
         else:
             # 否则以0.5作为thresholds
-            labels = np.where(prob < thresholds, 0, 1)
+            labels = np.where(prob < thresholds, -1, 1)
         return labels
 
     def get_jacobi(self):
@@ -45,6 +56,8 @@ class Accuracy(Metrics):
 
     def __init__(self, *parents, **kargs):
         Metrics.__init__(self, *parents, **kargs)
+
+    def init(self):
         self.correct_num = 0
         self.total_num = 0
 
@@ -55,7 +68,7 @@ class Accuracy(Metrics):
         '''
 
         pred = Metrics.prob_to_label(self.parents[0].value)
-        gt = Metrics.prob_to_label(self.parents[1].value)
+        gt = self.parents[1].value
         assert len(pred) == len(gt)
 
         self.correct_num += np.sum(pred == gt)
@@ -72,6 +85,8 @@ class Precision(Metrics):
 
     def __init__(self, *parents, **kargs):
         Metrics.__init__(self, *parents, **kargs)
+
+    def init(self):
         self.true_pos_num = 0
         self.pred_pos_num = 0
 
@@ -83,8 +98,8 @@ class Precision(Metrics):
 
         pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
-        self.pred_pos_num += np.sum(pred)
-        self.true_pos_num += np.multiply(pred, gt).sum()
+        self.pred_pos_num += np.sum(pred == 1)
+        self.true_pos_num += np.sum(pred == gt and pred == 1)
         self.value = 0
         if self.pred_pos_num != 0:
             self.value = float(self.true_pos_num) / self.pred_pos_num
@@ -97,6 +112,8 @@ class Recall(Metrics):
 
     def __init__(self, *parents, **kargs):
         Metrics.__init__(self, *parents, **kargs)
+
+    def init(self):
         self.gt_pos_num = 0
         self.true_pos_num = 0
 
@@ -108,11 +125,56 @@ class Recall(Metrics):
 
         pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
-        self.gt_pos_num += np.sum(gt)
-        self.true_pos_num += np.multiply(pred, gt).sum()
+        self.gt_pos_num += np.sum(gt == 1)
+        self.true_pos_num += np.sum(pred == gt and pred == 1)
         self.value = 0
         if self.gt_pos_num != 0:
             self.value = float(self.true_pos_num) / self.gt_pos_num
+
+
+class ROC(Metrics):
+    '''
+    ROC曲线
+    '''
+
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
+
+    def init(self):
+        self.count = 100
+        self.gt_pos_num = 0
+        self.gt_neg_num = 0
+        self.true_pos_num = np.array([0] * self.count)
+        self.false_pos_num = np.array([0] * self.count)
+        self.tpr = np.array([0] * self.count)
+        self.fpr = np.array([0] * self.count)
+
+    def compute(self):
+        logits = self.parents[0].value
+        gt = self.parents[1].value
+        self.gt_pos_num += np.sum(gt == 1)
+        self.gt_neg_num += np.sum(gt == -1)
+        # 最小值-5，最大值5，步长0.1，生成100个阈值
+        thresholds = list(np.arange(-5, 5, 0.1))
+        # 分别使用100个阈值，把阈值映射为1或者-1
+        for index in range(0, len(thresholds)):
+            pred = Metrics.prob_to_label(logits, thresholds[index])
+            self.true_pos_num[index] += np.sum(pred == gt and pred == 1)
+            self.false_pos_num[index] += np.sum(pred != gt and pred == 1)
+        # 分别计算TPR和FPR
+        if self.gt_pos_num != 0 and self.gt_neg_num != 0:
+            self.tpr = self.true_pos_num / self.gt_pos_num
+            self.fpr = self.false_pos_num / self.gt_neg_num
+
+    def value_str(self):
+        # import matplotlib
+        # matplotlib.use('TkAgg')
+        # import matplotlib.pyplot as plt
+        # plt.ylim(0, 1)
+        # plt.xlim(0, 1)
+        # plt.plot(self.fpr, self.tpr)
+        # plt.show()
+        return ''
 
 
 class F1Score(Metrics):

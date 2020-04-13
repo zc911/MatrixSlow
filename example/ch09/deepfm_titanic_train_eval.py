@@ -4,15 +4,13 @@ Created on Thu Mar  5 16:58:19 2020
 
 @author: chaos
 """
-
-import sys
-sys.path.append('../../')
 from matrixslow.trainer import SimpleTrainer
 import matrixslow as ms
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import pandas as pd
 import numpy as np
-
+import sys
+sys.path.append('../../')
 
 
 # 读取数据，去掉无用列
@@ -122,9 +120,12 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
 accuracy = ms.ops.metrics.Accuracy(output, label)
 precision = ms.ops.metrics.Precision(output, label)
+recall = ms.ops.metrics.Recall(output, label)
+
+roc = ms.ops.metrics.ROC(output, label)
 
 trainer = SimpleTrainer([x, x_Pclass, x_Sex, x_Embarked], label,
-                        output, loss, optimizer, epoches=20, batch=16, eval_on_train=True, metrics_ops=[accuracy, precision])
+                        output, loss, optimizer, epoches=20, batch=16, eval_on_train=True, metrics_ops=[accuracy, precision, recall])
 
 train_inputs = {
     x.name: features,
@@ -133,43 +134,3 @@ train_inputs = {
     x_Embarked.name: features[:, 9:]
 }
 trainer.train_and_eval(train_inputs, labels, train_inputs, labels)
-
-# batch_size = 16
-
-# for epoch in range(50):
-
-#     batch_count = 0
-#     for i in range(len(features)):
-
-#         x.set_value(np.mat(features[i]).T)
-
-#         # 从特征中选择各段One-Hot编码
-#         x_Pclass.set_value(np.mat(features[i, :3]).T)
-#         x_Sex.set_value(np.mat(features[i, 3:5]).T)
-#         x_Embarked.set_value(np.mat(features[i, 9:]).T)
-
-#         label.set_value(np.mat(labels[i]))
-
-#         optimizer.one_step()
-
-#         batch_count += 1
-#         if batch_count >= batch_size:
-
-#             optimizer.update()
-#             batch_count = 0
-
-#     pred = []
-#     for i in range(len(features)):
-
-#         x.set_value(np.mat(features[i]).T)
-#         x_Pclass.set_value(np.mat(features[i, :3]).T)
-#         x_Sex.set_value(np.mat(features[i, 3:5]).T)
-#         x_Embarked.set_value(np.mat(features[i, 9:]).T)
-
-#         predict.forward()
-#         pred.append(predict.value[0, 0])
-
-#     pred = (np.array(pred) > 0.5).astype(np.int) * 2 - 1
-#     accuracy = (labels == pred).astype(np.int).sum() / len(features)
-
-#     print("epoch: {:d}, accuracy: {:.3f}".format(epoch + 1, accuracy))

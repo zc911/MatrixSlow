@@ -112,7 +112,7 @@ class Trainer(object):
         使用测试集进行模型评估
         '''
         for metrics_op in self.metrics_ops:
-            metrics_op.reset_value()
+            metrics_op.reset()
 
         for i in range(len(list(test_x.values())[0])):
             self.one_step(self._get_input_values(
