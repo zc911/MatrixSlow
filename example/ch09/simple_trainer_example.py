@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-12 22:19:00
+@LastEditTime: 2020-04-12 23:31:00
 @LastEditors: chenzhen
 @Description:
 '''
@@ -14,6 +14,7 @@ import matrixslow as ms
 from sklearn.preprocessing import OneHotEncoder
 from sklearn.datasets import fetch_openml
 import numpy as np
+
 
 
 # 加载MNIST数据集，取一部分样本并归一化
@@ -70,6 +71,6 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 batch_size = 32
 
 trainer = SimpleTrainer(
-    x, one_hot, output, loss, optimizer, epoches=10, batch_size=batch_size)
+    [x], one_hot, output, loss, optimizer, epoches=10, batch_size=batch_size)
 
-trainer.train(X, one_hot_label)
+trainer.train({x.name: X}, one_hot_label)

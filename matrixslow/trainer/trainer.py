@@ -18,12 +18,12 @@ class Trainer(object):
     训练器
     '''
 
-    def __init__(self, input_x, input_y, logits,
+    def __init__(self, inputs, input_y, logits,
                  loss_op, optimizer,
                  epoches, batch_size=8,
                  eval_on_train=False, metrics_ops=None, *args, **kargs):
-        # 计算图的输入节点，或者叫feature节点
-        self.input_x = input_x
+        # 计算图的输入节点，或者叫feature节点，输入节点可以有多个，因此类型是list
+        self.inputs = inputs
         # 计算图的label节点
         self.input_y = input_y
         # 计算图的输出节点
@@ -46,33 +46,77 @@ class Trainer(object):
         self.print_iteration_interval = kargs.get(
             'print_iteration_interval', 100)
 
-    @abc.abstractmethod
-    def _variable_weights_init(self):
+    def train_and_eval(self, train_x, train_y, test_x=None, test_y=None):
         '''
-        权值变量初始化，具体的初始化操作由子类完成
+        开始训练(验证)流程
         '''
-        raise NotImplementedError()
+        # assert len(train_x) == len(train_y)
+        assert len(train_x) == len(self.inputs)
 
-    def one_step(self, data_x, data_y):
-        '''
-        执行一次前向计算和一次后向计算(可能)
-        '''
-        self.input_x.set_value(np.mat(data_x).reshape(self.input_x.dim).T)
-        self.input_y.set_value(np.mat(data_y).T)
+        if test_x is not None and test_y is not None:
+            # assert len(test_x) == len(test_y)
+            assert len(test_x) == len(self.inputs)
 
-        self.optimizer.one_step()
+        # 初始化权值变量
+        self._variable_weights_init()
+        print('[INIT] Variable weights init finished')
+        # 传入数据，开始主循环
+        self.main_loop(train_x, train_y, test_x, test_y)
+
+    def main_loop(self, train_x, train_y, test_x, test_y):
+        '''
+        训练（验证）的主循环
+        '''
+        # 第一层循环，迭代epoches次数
+        for self.epoch in range(self.epoches):
+            # 模型训练和优化
+            self.train(train_x, train_y)
+            # 如果需要，对模型进行评估
+            if self.eval_on_train and test_x is not None and test_y is not None:
+                self.eval(test_x, test_y)
+
+    def train(self, train_x, train_y):
+        '''
+        使用训练集进行模型训练和梯度更新
+        '''
+        print('- Epoch [{}] train start, batch size: {}, train data size: {}'.format(
+            self.epoch + 1, self.batch_size, len(train_x)))
+        start_time = time.time()
+        last_batch_start_time = time.time()
+        last_iter_start_time = time.time()
+        # 遍历训练数据集
+        for i in range(len(list(train_x.values())[0])):
+            # 使用一条样本数据，执行一次前向传播和后向传播
+            self.one_step(self._get_input_values(train_x, i), train_y[i])
+
+            if (i+1) % self.print_iteration_interval == 0:
+                print('-- iteration [{}] finished, time cost: {:.2f}  and loss value: {:4f}'.format(
+                    i, time.time() - last_iter_start_time, float(self.loss_op.value)))
+                last_iter_start_time = time.time()
+            # 如果次数超过一个mini batch，执行一次梯度更新，优化参数变量
+            if (i+1) % self.batch_size == 0:
+                last_batch_end_time = time.time()
+                last_update_start_time = time.time()
+                self._optimizer_update()
+                computing_cost = last_batch_end_time - last_batch_start_time
+                gra_update_cost = time.time() - last_update_start_time
+                # print('---- Batch [{}] finished, computing cost: {:.2f}, gradients update cost: {:.2f} and total cost: {:.2f}'.format(
+                #     int((i+1)/self.batch_size), computing_cost, gra_update_cost, computing_cost + gra_update_cost))
+                last_batch_start_time = time.time()
+
+        print('- Epoch [{}] train finished, time cost: {:.2f}'.format(
+            self.epoch + 1, time.time() - start_time))
 
     def eval(self, test_x, test_y):
         '''
-        在测试集合上进行算法评估
+        使用测试集进行模型评估
         '''
         for metrics_op in self.metrics_ops:
             metrics_op.reset_value()
 
-        for i in range(len(test_x)):
-            self.input_x.set_value(np.mat(test_x[i]).T)
-            self.input_y.set_value(np.mat(test_y[i]).T)
-
+        for i in range(len(list(test_x.values())[0])):
+            self.one_step(self._get_input_values(
+                test_x, i), test_y[i], is_eval=True)
             for metrics_op in self.metrics_ops:
                 metrics_op.forward()
 
@@ -81,53 +125,38 @@ class Trainer(object):
             metrics_str += metrics_op.value_str()
         print(metrics_str)
 
+    def _get_input_values(self, x, index):
+        '''
+        x是dict类型的全量数据集，需要取出第index个样本
+        '''
+        input_values = dict()
+        for input_node_name in x.keys():
+            input_values[input_node_name] = x[input_node_name][index]
+        return input_values
+
+    def one_step(self, data_x, data_y, is_eval=False):
+        '''
+        执行一次前向计算和一次后向计算(可能)
+        '''
+        for i in range(len(self.inputs)):
+            # 根据输入节点的名称，从输入数据dict中找到对应数据
+            input_value = data_x.get(self.inputs[i].name)
+            self.inputs[i].set_value(np.mat(input_value).T)
+        self.input_y.set_value(np.mat(data_y).T)
+        # 只有在训练阶段才运行优化器
+        if not is_eval:
+            self.optimizer.one_step()
+
     @abc.abstractmethod
-    def _optimizer_update(self):
+    def _variable_weights_init(self):
+        '''
+        权值变量初始化，具体的初始化操作由子类完成
+        '''
         raise NotImplementedError()
 
-    def main_loop(self, train_x, train_y, test_x, test_y):
+    @abc.abstractmethod
+    def _optimizer_update(self):
         '''
-        训练（验证）的主循环
+        调用优化器进行优化
         '''
-        for self.epoch in range(self.epoches):
-            print('- Epoch [{}] train start, batch size: {}, train data size: {}'.format(
-                self.epoch + 1, self.batch_size, len(train_x)))
-            start_time = time.time()
-            last_batch_start_time = time.time()
-            last_iter_start_time = time.time()
-            for i in range(len(train_x)):
-                self.one_step(train_x[i], train_y[i])
-
-                if (i+1) % self.print_iteration_interval == 0:
-                    print('-- Epoch [{}] iteration [{}] finished, time cost: {:.2f}  and loss value: {:4f}'.format(
-                        self.epoch + 1, i, time.time() - last_iter_start_time, float(self.loss_op.value)))
-                    last_iter_start_time = time.time()
-
-                if (i+1) % self.batch_size == 0:
-                    last_batch_end_time = time.time()
-                    last_update_start_time = time.time()
-                    self._optimizer_update()
-                    computing_cost = last_batch_end_time - last_batch_start_time
-                    gra_update_cost = time.time() - last_update_start_time
-                    # print('---- Batch [{}] finished, computing cost: {:.2f}, gradients update cost: {:.2f} and total cost: {:.2f}'.format(
-                    #     int((i+1)/self.batch_size), computing_cost, gra_update_cost, computing_cost + gra_update_cost))
-                    last_batch_start_time = time.time()
-
-            print('- Epoch [{}] train finished, time cost: {:.2f}'.format(
-                self.epoch + 1, time.time() - start_time))
-
-            if self.eval_on_train and test_x is not None and test_y is not None:
-                self.eval(test_x, test_y)
-
-    def train(self, train_x, train_y, test_x=None, test_y=None):
-        '''
-        开始训练(验证)流程
-        '''
-        assert len(train_x) == len(train_y)
-        if test_x is not None and test_y is not None:
-            assert len(test_x) == len(test_y)
-        # 初始化权值变量
-        self._variable_weights_init()
-        print('[INIT] Variable weights init finished')
-        # 传入数据，开始主循环
-        self.main_loop(train_x, train_y, test_x, test_y)
+        raise NotImplementedError()
