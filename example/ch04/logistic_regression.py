@@ -34,29 +34,38 @@ x = ms.core.Variable(dim=(3, 1), init=False, trainable=False)
 # 类别标签，1男，-1女
 label = ms.core.Variable(dim=(1, 1), init=False, trainable=False)
 
-# 权重向量，是一个1x3矩阵，需要初始化，参与训练
+# 权值向量，是一个1x3矩阵，需要初始化，参与训练
 w = ms.core.Variable(dim=(1, 3), init=True, trainable=True)
 
-# 阈值，是一个1x1矩阵，需要初始化，参与训练
+# 偏置，是一个1x1矩阵，需要初始化，参与训练
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
 
-# ADALINE的预测输出
+# 预测输出
 output = ms.ops.Add(ms.ops.MatMul(w, x), b)
 predict = ms.ops.Logistic(output)
 
-# 损失函数
+# 对数损失
 loss = ms.ops.loss.LogLoss(ms.ops.Multiply(label, output))
 
 # 学习率
 learning_rate = 0.0001
 
+# 构造Adam优化器
+optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
+
+# 批大小为16
+batch_size = 16
+
 # 训练执行50个epoch
 for epoch in range(50):
+    
+    # 批计数器清零
+    batch_count = 0
     
     # 遍历训练集中的样本
     for i in range(len(train_set)):
         
-        # 取第i个样本的前4列（除最后一列的所有列），构造3x1矩阵对象
+        # 取第i个样本的前3列，构造3x1矩阵对象
         features = np.mat(train_set[i,:-1]).T
         
         # 取第i个样本的最后一列，是该样本的性别标签（1男，-1女），构造1x1矩阵对象
@@ -66,20 +75,19 @@ for epoch in range(50):
         x.set_value(features)
         label.set_value(l)
         
-        # 在loss节点上执行前向传播，计算损失值
-        loss.forward()
-       
-        # 在w和b节点上执行反向传播，计算损失值对它们的雅可比矩阵
-        w.backward(loss)
-        b.backward(loss)
+        # 调用优化器的one_step方法，执行一次前向传播和反向传播
+        optimizer.one_step()
         
-        w.set_value(w.value - learning_rate * w.jacobi.T.reshape(w.shape()))
-        b.set_value(b.value - learning_rate * b.jacobi.T.reshape(b.shape()))
+        # 批计数器加1
+        batch_count += 1
         
-        # default_graph对象保存了所有节点，调用clear_jacobi方法清除所有节点的雅可比矩阵
-        ms.default_graph.clear_jacobi()
+        # 若批计数器大于等于批大小，则执行一次更新，并清零计数器
+        if batch_count >= batch_size:
+            optimizer.update()
+            batch_count = 0
+            
 
-    # 每个epoch结束后评价模型的正确率
+    # 每个epoch结束后评估模型的正确率
     pred = []
     
     # 遍历训练集，计算当前模型对每个样本的预测值
@@ -91,8 +99,9 @@ for epoch in range(50):
         # 在模型的predict节点上执行前向传播
         predict.forward()
         pred.append(predict.value[0, 0])  # 模型的预测结果：1男，0女
-            
-    pred = (np.array(pred) > 0.5).astype(np.int) * 2 - 1  # 将1/0结果转化成1/-1结果，好与训练标签的约定一致
+       
+    # 将1/0结果转化成1/-1结果，好与训练标签的约定一致
+    pred = (np.array(pred) > 0.5).astype(np.int) * 2 - 1
     
     # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
     accuracy = (train_set[:,-1] == pred).astype(np.int).sum() / len(train_set)

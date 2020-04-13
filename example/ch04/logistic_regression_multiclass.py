@@ -12,22 +12,29 @@ import matrixslow as ms
 
 # 读取鸢尾花数据集，去掉第一列Id
 data = pd.read_csv("data/Iris.csv").drop("Id", axis=1)
+
 # 随机打乱样本顺序
 data = data.sample(len(data), replace=False)
+
 # 将字符串形式的类别标签转换成整数0，1，2
 le = LabelEncoder()
 number_label = le.fit_transform(data["Species"])
+
 # 将整数形式的标签转换成One-Hot编码
 oh = OneHotEncoder(sparse=False)
 one_hot_label = oh.fit_transform(number_label.reshape(-1, 1))
-#特征列
-features = data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']].values
+
+# 特征列
+features = data[['SepalLengthCm',
+                 'SepalWidthCm',
+                 'PetalLengthCm',
+                 'PetalWidthCm']].values
 
 
 # 构造计算图：输入向量，是一个4x1矩阵，不需要初始化，不参与训练
 x = ms.core.Variable(dim=(4, 1), init=False, trainable=False)
 
-# One-Hot类别标签，是3x1矩阵
+# One-Hot类别标签，是3x1矩阵，不需要初始化，不参与训练
 one_hot = ms.core.Variable(dim=(3, 1), init=False, trainable=False)
 
 # 权值矩阵，是一个3x4矩阵，需要初始化，参与训练
@@ -42,7 +49,7 @@ linear = ms.ops.Add(ms.ops.MatMul(W, x), b)
 # 模型输出
 predict = ms.ops.SoftMax(linear)
 
-# 交叉熵损失损失函数
+# 交叉熵损失
 loss = ms.ops.loss.CrossEntropyWithSoftMax(linear, one_hot)
 
 # 学习率
@@ -83,8 +90,9 @@ for epoch in range(200):
         if batch_count >= batch_size:
             optimizer.update()
             batch_count = 0
+            
 
-    # 每个epoch结束后评价模型的正确率
+    # 每个epoch结束后评估模型的正确率
     pred = []
     
     # 遍历训练集，计算当前模型对每个样本的预测值
@@ -96,8 +104,9 @@ for epoch in range(200):
         # 在模型的predict节点上执行前向传播
         predict.forward()
         pred.append(predict.value.A.ravel())  # 模型的预测结果：3个概率值
-            
-    pred = np.array(pred).argmax(axis=1)  # 取最大概率对应的类别为预测类别
+    
+    # 取最大概率对应的类别为预测类别
+    pred = np.array(pred).argmax(axis=1)
     
     # 判断预测结果与样本标签相同的数量与训练集总数量之比，即模型预测的正确率
     accuracy = (number_label == pred).astype(np.int).sum() / len(data)
