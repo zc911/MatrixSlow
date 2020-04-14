@@ -4,7 +4,6 @@ Created on Wed Jul 10 17:34:46 CST 2019
 
 @author: chenzhen
 """
-from sklearn.metrics import roc_auc_score
 import numpy as np
 import abc
 from ..core import Node
