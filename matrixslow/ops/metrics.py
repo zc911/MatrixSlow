@@ -4,7 +4,7 @@ Created on Wed Jul 10 17:34:46 CST 2019
 
 @author: chenzhen
 """
-
+from sklearn.metrics import roc_auc_score
 import numpy as np
 import abc
 from ..core import Node
@@ -175,6 +175,41 @@ class ROC(Metrics):
         # plt.plot(self.fpr, self.tpr)
         # plt.show()
         return ''
+
+
+class ROC_AUC(Metrics):
+    '''
+    ROC AUC
+    '''
+
+    def __init__(self, *parents, **kargs):
+        Metrics.__init__(self, *parents, **kargs)
+
+    def init(self):
+        self.gt_pos_preds = []
+        self.gt_neg_preds = []
+
+    def compute(self):
+        logits = self.parents[0].value
+        gt = self.parents[1].value
+        # 简单起见，假设只有一个元素
+        if gt[0, 0] == 1:
+            self.gt_pos_preds.append(logits)
+        else:
+            self.gt_neg_preds.append(logits)
+
+        self.total = len(self.gt_pos_preds) * len(self.gt_neg_preds)
+
+    def value_str(self):
+        count = 0
+        # 遍历M*N个样本对，计算正样本概率大于负样本概率的数量
+        for gt_pos_pred in self.gt_pos_preds:
+            for gt_neg_pred in self.gt_neg_preds:
+                if gt_pos_pred > gt_neg_pred:
+                    count += 1
+        # 使用这个数量，除以M*N
+        self.value = float(count) / self.total
+        return "{}: {:.4f} ".format(self.__class__.__name__, self.value)
 
 
 class F1Score(Metrics):
