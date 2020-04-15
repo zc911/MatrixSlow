@@ -24,8 +24,11 @@ number_label = le.fit_transform(data["Species"])
 oh = OneHotEncoder(sparse=False)
 one_hot_label = oh.fit_transform(number_label.reshape(-1, 1))
 
-#特征列
-features = data[['SepalLengthCm', 'SepalWidthCm', 'PetalLengthCm', 'PetalWidthCm']].values
+# 特征列
+features = data[['SepalLengthCm',
+                 'SepalWidthCm',
+                 'PetalLengthCm',
+                 'PetalWidthCm']].values
 
 
 # 构造计算图：输入向量，是一个4x1矩阵，不需要初始化，不参与训练
@@ -43,10 +46,10 @@ hidden_2 = ms.layer.fc(hidden_1, 10, 10, "ReLU")
 # 输出层，3个神经元，无激活函数
 output = ms.layer.fc(hidden_2, 10, 3, None)
 
-# 模型输出
+# 模型输出概率
 predict = ms.ops.SoftMax(output)
 
-# 交叉熵损失损失函数
+# 交叉熵损失函数
 loss = ms.ops.loss.CrossEntropyWithSoftMax(output, one_hot)
 
 # 学习率
@@ -58,7 +61,7 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 # 批大小为16
 batch_size = 16
 
-# 训练执行200个epoch
+# 训练执行10个epoch
 for epoch in range(30):
     
     # 批计数器清零
@@ -83,15 +86,15 @@ for epoch in range(30):
         # 批计数器加1
         batch_count += 1
         
-        # 若批计数器大于等于批大小，则执行一次梯度下降更新，并清零计数器
+        # 若批计数器大于等于批大小，则执行一次更新，并清零计数器
         if batch_count >= batch_size:
             optimizer.update()
             batch_count = 0
 
-    # 每个epoch结束后评价模型的正确率
+    # 每个epoch结束后评估模型的正确率
     pred = []
     
-    # 遍历训练集，计算当前模型对每个样本的预测值
+    # 遍历训练集，计算当前模型对每个样本的预测概率
     for i in range(len(features)):
                 
         feature = np.mat(features[i,:]).T
