@@ -1,3 +1,12 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+@Author: chenzhen
+@Date: 2020-04-03 19:40:23
+@LastEditTime: 2020-04-20 16:57:33
+@LastEditors: chenzhen
+@Description:
+'''
 # -*- coding: utf-8 -*-
 """
 Created on Wed July  9 15:13:01 2019
@@ -21,20 +30,19 @@ class LossFunction(Node):
 class LogLoss(LossFunction):
 
     def compute(self):
-        
+
         assert len(self.parents) == 1
-        
+
         x = self.parents[0].value
-        
+
         self.value = np.log(1 + np.power(np.e, np.where(-x > 1e2, 1e2, -x)))
 
     def get_jacobi(self, parent):
-        
+
         x = parent.value
         diag = -1 / (1 + np.power(np.e, np.where(x > 1e2, 1e2, x)))
-        
+
         return np.diag(diag.ravel())
-        
 
 
 class CrossEntropyWithSoftMax(LossFunction):
@@ -72,5 +80,3 @@ class PerceptionLoss(LossFunction):
         """
         diag = np.where(parent.value >= 0.0, 0.0, -1)
         return np.diag(diag.ravel())
-
-

@@ -19,6 +19,7 @@ class Node(object):
     def __init__(self, *parents, **kargs):
 
         # 计算图对象，默认为全局对象default_graph
+        self.kargs = kargs
         self.graph = kargs.get('graph', default_graph)
         self.need_save = kargs.get('need_save', True)
         self.gen_node_name(**kargs)

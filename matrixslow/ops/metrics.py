@@ -34,7 +34,8 @@ class Metrics(Node):
     def prob_to_label(prob, thresholds=0.0):
         if prob.shape[0] > 1:
             # 如果是多分类，预测值为概率最大的标签
-            labels = np.argmax(prob, axis=0)
+            labels = np.zeros((prob.shape[0], 1))
+            labels[np.argmax(prob, axis=0)] = 1
         else:
             # 否则以0.5作为thresholds
             labels = np.where(prob < thresholds, -1, 1)
@@ -69,9 +70,12 @@ class Accuracy(Metrics):
         pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
         assert len(pred) == len(gt)
-
-        self.correct_num += np.sum(pred == gt)
-        self.total_num += len(pred)
+        if pred.shape[0] > 1:
+            self.correct_num += np.sum(np.multiply(pred, gt))
+            self.total_num += pred.shape[1]
+        else:
+            self.correct_num += np.sum(pred == gt)
+            self.total_num += len(pred)
         self.value = 0
         if self.total_num != 0:
             self.value = float(self.correct_num) / self.total_num

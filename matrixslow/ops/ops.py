@@ -131,11 +131,12 @@ class Reshape(Operator):
     改变父节点的值（矩阵）的形状
     """
 
-    def __init__(self, parent, shape):
-        Operator.__init__(self, parent)
+    def __init__(self, *parent, **kargs):
+        Operator.__init__(self, *parent, **kargs)
 
-        assert isinstance(shape, tuple) and len(shape) == 2
-        self.to_shape = shape
+        self.to_shape = kargs.get('shape')
+        assert isinstance(self.to_shape, tuple) and len(self.to_shape) == 2
+
 
     def compute(self):
         self.value = self.parents[0].value.reshape(self.to_shape)
@@ -229,14 +230,16 @@ class MaxPooling(Operator):
     最大值池化
     """
 
-    def __init__(self, parent, size, stride, **kargs):
-        Operator.__init__(self, parent, **kargs)
+    def __init__(self, *parent, **kargs):
+        Operator.__init__(self, *parent, **kargs)
 
-        assert isinstance(stride, tuple) and len(stride) == 2
-        self.stride = stride
 
-        assert isinstance(size, tuple) and len(size) == 2
-        self.size = size
+        self.stride = kargs.get('stride')
+        assert isinstance(self.stride, tuple) and len(self.stride) == 2
+
+
+        self.size = kargs.get('size')
+        assert isinstance(self.size, tuple) and len(self.size) == 2
 
         self.flag = None
 
@@ -340,32 +343,32 @@ class Step(Operator):
     def get_jacobi(self, parent):
         np.mat(np.eye(self.dimension()))
         return np.zeros(np.where(self.parents[0].value.A1 >= 0.0, 0.0, -1.0))
-    
+
 
 class Welding(Operator):
-    
+
     def compute(self):
-        
+
         assert len(self.parents) == 1 and self.parents[0] is not None
         self.value = self.parents[0].value
-    
+
     def get_jacobi(self, parent):
-        
+
         assert parent is self.parents[0]
         return np.mat(np.eye(self.dimension()))
-    
+
     def weld(self, node):
         """
         将本节点焊接到输入节点上
         """
-        
+
         # 首先与之前的父节点断开
-        
+
         if len(self.parents) == 1 and self.parents[0] is not None:
             self.parents[0].children.remove(self)
-        
+
         self.parents.clear()
-        
+
         # 与输入节点焊接
         self.parents.append(node)
         node.children.append(self)

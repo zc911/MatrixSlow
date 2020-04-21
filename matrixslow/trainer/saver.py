@@ -34,37 +34,24 @@ class Saver(object):
         if not os.path.exists(self.root_dir):
             os.mkdir(self.root_dir)
 
-    @staticmethod
-    def create_node(graph, from_model_json, node_json):
+    def save(self, graph=None, meta=None, service_signature=None,
+             model_file_name='model.json',
+             weights_file_name='weights.npz'):
         '''
-        静态工具函数，递归创建不存在的节点
+        把计算图保存到文件中
         '''
-        node_type = node_json['node_type']
-        node_name = node_json['name']
-        parents_name = node_json['parents']
-        dim = node_json.get('dim', Node)
-        parents = []
-        for parent_name in parents_name:
-            parent_node = get_node_from_graph(parent_name, graph=graph)
-            if parent_node is None:
-                parent_node_json = None
-                for node in from_model_json:
-                    if node['name'] == parent_name:
-                        parent_node_json = node
+        if graph is None:
+            graph = default_graph
 
-                assert parent_node_json is not None
-                # 如果父节点不存在，递归调用
-                parent_node = create_node(
-                    graph, from_model_json, parent_node_json)
-
-            parents.append(parent_node)
-        # 反射创建节点实例
-        if node_type == 'Variable':
-            assert dim is not None
-            dim = tuple(dim)
-            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=dim, name=node_name)
-        else:
-            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name)
+        # 元信息，主要记录模型的保存时间和权重文件名
+        meta = {} if meta is None else meta
+        meta['save_time'] = str(datetime.datetime.now())
+        meta['weights_file_name'] = weights_file_name
+        # 服务接口描述
+        service = {} if service_signature is None else service_signature
+        # 开始保存操作
+        self._save_model_and_weights(
+            graph, meta, service, model_file_name, weights_file_name)
 
     def _save_model_and_weights(self, graph, meta, service, model_file_name, weights_file_name):
         model_json = {
@@ -81,7 +68,8 @@ class Saver(object):
                 'node_type': node.__class__.__name__,
                 'name': node.name,
                 'parents': [parent.name for parent in node.parents],
-                'children': [child.name for child in node.children]
+                'children': [child.name for child in node.children],
+                'kargs': node.kargs
             }
             # 保存节点的dim信息
             if node.value is not None:
@@ -107,6 +95,39 @@ class Saver(object):
             np.savez(weights_file, **weights_dict)
             print('Save weights to file: {}'.format(weights_file.name))
 
+    @staticmethod
+    def create_node(graph, from_model_json, node_json):
+        '''
+        静态工具函数，递归创建不存在的节点
+        '''
+        node_type = node_json['node_type']
+        node_name = node_json['name']
+        parents_name = node_json['parents']
+        dim = node_json.get('dim', Node)
+        kargs = node_json.get('kargs', None)
+        parents = []
+        for parent_name in parents_name:
+            parent_node = get_node_from_graph(parent_name, graph=graph)
+            if parent_node is None:
+                parent_node_json = None
+                for node in from_model_json:
+                    if node['name'] == parent_name:
+                        parent_node_json = node
+
+                assert parent_node_json is not None
+                # 如果父节点不存在，递归调用
+                parent_node = create_node(
+                    graph, from_model_json, parent_node_json)
+
+            parents.append(parent_node)
+        # 反射创建节点实例
+        if node_type == 'Variable':
+            assert dim is not None
+            dim = tuple(dim)
+            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=dim, name=node_name, **kargs)
+        else:
+            return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name, **kargs)
+
     def _restore_nodes(self, graph, from_model_json, from_weights_dict):
         for index in range(len(from_model_json)):
             node_json = from_model_json[index]
@@ -125,23 +146,6 @@ class Saver(object):
                 target_node = Saver.create_node(
                     graph, from_model_json, node_json)
             target_node.value = weights
-
-    def save(self, graph=None, meta=None, service_signature=None,
-             model_file_name='model.json',
-             weights_file_name='weights.npz'):
-        '''
-        把计算图保存到文件中
-        '''
-        if graph is None:
-            graph = default_graph
-
-        meta = {} if meta is None else meta
-        meta['save_time'] = str(datetime.datetime.now())
-        meta['weights_file_name'] = weights_file_name
-
-        service = {} if service_signature is None else service_signature
-        self._save_model_and_weights(
-            graph, meta, service, model_file_name, weights_file_name)
 
     def load(self, to_graph=None,
              model_file_name='model.json',

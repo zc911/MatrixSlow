@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-12 23:31:00
+@LastEditTime: 2020-04-20 17:17:08
 @LastEditors: chenzhen
 @Description:
 '''
@@ -22,6 +22,7 @@ import numpy as np
 
 X, y = fetch_openml('mnist_784', version=1, return_X_y=True, cache=True)
 X, y = X[:1000] / 255, y.astype(np.int)[:1000]
+X = np.reshape(np.array(X), (1000, 28, 28))
 
 # 将整数形式的标签转换成One-Hot编码
 oh = OneHotEncoder(sparse=False)
