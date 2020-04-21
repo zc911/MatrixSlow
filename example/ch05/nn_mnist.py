@@ -49,7 +49,7 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 # 批大小为64
 batch_size = 64
 
-# 训练执行10个epoch
+# 训练执行30个epoch
 for epoch in range(30):
     
     # 批计数器清零
@@ -78,14 +78,15 @@ for epoch in range(30):
         if batch_count >= batch_size:
             
             # 打印当前epoch数，迭代数与损失值
-            print("epoch: {:d}, iteration: {:d}, loss: {:.3f}".format(epoch + 1, i + 1, loss.value[0, 0]))
+            print("epoch: {:d}, iteration: {:d}, loss: {:.3f}".format(
+                    epoch + 1, i + 1, loss.value[0, 0]))
 
-            # 优化器执行梯度下降更新
+            # 优化器执行更新
             optimizer.update()
             batch_count = 0
         
 
-    # 每个epoch结束后评价模型的正确率
+    # 每个epoch结束后评估模型的正确率
     pred = []
     
     # 遍历训练集，计算当前模型对每个样本的预测值
