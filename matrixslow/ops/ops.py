@@ -238,12 +238,15 @@ class MaxPooling(Operator):
     def __init__(self, *parent, **kargs):
         Operator.__init__(self, *parent, **kargs)
 
-
         self.stride = kargs.get('stride')
+        assert self.stride is not None
+        self.stride = tuple(self.stride)
         assert isinstance(self.stride, tuple) and len(self.stride) == 2
 
 
         self.size = kargs.get('size')
+        assert self.size is not None
+        self.size = tuple(self.size)
         assert isinstance(self.size, tuple) and len(self.size) == 2
 
         self.flag = None

@@ -103,7 +103,7 @@ class Saver(object):
         node_type = node_json['node_type']
         node_name = node_json['name']
         parents_name = node_json['parents']
-        dim = node_json.get('dim', Node)
+        dim = node_json.get('dim', None)
         kargs = node_json.get('kargs', None)
         parents = []
         for parent_name in parents_name:
@@ -121,8 +121,10 @@ class Saver(object):
 
             parents.append(parent_node)
         # 反射创建节点实例
+
         if node_type == 'Variable':
             assert dim is not None
+
             dim = tuple(dim)
             return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, dim=dim, name=node_name, **kargs)
         else:
