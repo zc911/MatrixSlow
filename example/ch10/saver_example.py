@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-22 11:06:52
+@LastEditTime: 2020-04-22 14:38:01
 @LastEditors: chenzhen
 @Description:
 '''
@@ -15,7 +15,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import OneHotEncoder
 import matrixslow as ms
 from matrixslow.trainer import SimpleTrainer
-
+from matrixslow_serving.exporter import Exporter
 
 
 # 加载MNIST数据集，取一部分样本并归一化
@@ -33,7 +33,7 @@ one_hot_label = oh.fit_transform(y.reshape(-1, 1))
 
 
 # 输入图像
-x = ms.core.Variable(img_shape, init=False, trainable=False)
+x = ms.core.Variable(img_shape, init=False, trainable=False, name='img_input')
 
 # One-Hot标签
 one_hot = ms.core.Variable(dim=(10, 1), init=False, trainable=False)
@@ -57,7 +57,7 @@ fc1 = ms.layer.fc(ms.ops.Concat(*pooling2), 147, 120, "ReLU")
 output = ms.layer.fc(fc1, 120, 10, "None")
 
 # 分类概率
-predict = ms.ops.SoftMax(output)
+predict = ms.ops.SoftMax(output, name='softmax_output')
 
 # 交叉熵损失
 loss = ms.ops.loss.CrossEntropyWithSoftMax(output, one_hot)
@@ -77,6 +77,9 @@ trainer = SimpleTrainer(
 
 trainer.train_and_eval({x.name: X}, one_hot_label, {x.name: X}, one_hot_label)
 
+exporter = Exporter()
+sig = exporter.signature('img_input', 'softmax_output')
+
 saver = ms.trainer.Saver('./epoches10')
 saver.save(model_file_name='my_model.json',
-           weights_file_name='my_weights.npz')
+           weights_file_name='my_weights.npz', service_signature=sig)

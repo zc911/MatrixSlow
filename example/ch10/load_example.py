@@ -3,19 +3,17 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-22 12:03:40
+@LastEditTime: 2020-04-22 14:37:17
 @LastEditors: chenzhen
 @Description:
 '''
+import sys
+sys.path.append('../../')
 import numpy as np
 from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import OneHotEncoder
 import matrixslow as ms
 from matrixslow.trainer import SimpleTrainer
-import sys
-sys.path.append('../../')
-
-
 
 
 # 输入图像尺寸
@@ -35,8 +33,8 @@ saver.load(model_file_name='my_model.json', weights_file_name='my_weights.npz')
 
 # 根据训练时定义的节点名称，从计算图中把输入输出节点查询出来
 # 如果训练时未定义，节点名称自动生成，需要从模型文件中人为识别出来
-x = ms.get_node_from_graph('Variable:0')
-pred = ms.get_node_from_graph('SoftMax:74')
+x = ms.get_node_from_graph('img_input')
+pred = ms.get_node_from_graph('softmax_output')
 
 for index in range(len(test_data)):
     # 把预测数据赋值给输入节点

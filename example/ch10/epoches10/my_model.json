@@ -1,13 +1,20 @@
 {
     "meta": {
-        "save_time": "2020-04-22 11:33:59.367100",
+        "save_time": "2020-04-22 15:32:17.049232",
         "weights_file_name": "my_weights.npz"
     },
-    "service": {},
+    "service": {
+        "inputs": {
+            "name": "img_input"
+        },
+        "outputs": {
+            "name": "softmax_output"
+        }
+    },
     "graph": [
         {
             "node_type": "Variable",
-            "name": "Variable:0",
+            "name": "img_input",
             "parents": [],
             "children": [
                 "Convolve:4",
@@ -66,7 +73,7 @@
             "node_type": "Convolve",
             "name": "Convolve:4",
             "parents": [
-                "Variable:0",
+                "img_input",
                 "Variable:3"
             ],
             "children": [
@@ -170,7 +177,7 @@
             "node_type": "Convolve",
             "name": "Convolve:11",
             "parents": [
-                "Variable:0",
+                "img_input",
                 "Variable:10"
             ],
             "children": [
@@ -274,7 +281,7 @@
             "node_type": "Convolve",
             "name": "Convolve:18",
             "parents": [
-                "Variable:0",
+                "img_input",
                 "Variable:17"
             ],
             "children": [
@@ -1158,7 +1165,7 @@
                 "Variable:71"
             ],
             "children": [
-                "SoftMax:74",
+                "softmax_output",
                 "CrossEntropyWithSoftMax:75",
                 "Accuracy:76"
             ],
@@ -1170,7 +1177,7 @@
         },
         {
             "node_type": "SoftMax",
-            "name": "SoftMax:74",
+            "name": "softmax_output",
             "parents": [
                 "Add:73"
             ],

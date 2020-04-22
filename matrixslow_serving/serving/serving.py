@@ -40,7 +40,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
         assert inputs is not None
         outputs = service.get('outputs', None)
         assert outputs is not None
-
+        # 根据服务签名中记录的名字，从计算图中查找出输入和输出节点
         self.input_node = ms.get_node_from_graph(inputs['name'])
         assert self.input_node is not None
         assert isinstance(self.input_node, ms.Variable)
@@ -50,8 +50,11 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
         assert self.output_node is not None
 
     def Predict(self, predict_req, context):
+        # 从protobuf数据反序列化成numpy mat
         inference_req = MatrixSlowServingService.deserialize(predict_req)
+        # 调用计算图，前向传播计算模型预测结果
         inference_resp = self._inference(inference_req)
+        # 预测结果序列化成protobuf格式，通过网络返回
         predict_resp = MatrixSlowServingService.serialize(inference_resp)
         return predict_resp
 
@@ -77,7 +80,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
     def _inference(self, inference_req):
         inference_resp_mat_list = []
         for mat in inference_req:
-            # 数据输入模型并执行forward运算
+            # 数据输入模型并执行forward前向传播计算
             self.input_node.set_value(mat.T)
             self.output_node.forward()
             # 把输出节点的值作为结果返回
@@ -85,7 +88,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
         return inference_resp_mat_list
 
 
-class MatrixSlowServing(object):
+class MatrixSlowServer(object):
     def __init__(self, host, root_dir, model_file_name, weights_file_name, max_workers=10):
         self.host = host
         self.max_workers = max_workers

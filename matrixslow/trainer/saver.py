@@ -64,6 +64,7 @@ class Saver(object):
         for node in graph.nodes:
             if not node.need_save:
                 continue
+            node.kargs.pop('name', None)
             node_json = {
                 'node_type': node.__class__.__name__,
                 'name': node.name,
