@@ -32,7 +32,7 @@ class Operator(Node):
     pass
 
 
-class Add(Node):
+class Add(Operator):
     """
     （多个）矩阵加法
     """
