@@ -81,7 +81,7 @@ class Optimizer(object):
         # 执行更新
         self._update()
 
-        # 清除累计梯度
+        # 清除累加梯度
         self.acc_gradient.clear()
         self.acc_no = 0
 
@@ -136,7 +136,7 @@ class GradientDescent(Optimizer):
 
 class Momentum(Optimizer):
     """
-    Momentum动量梯度下降
+    冲量法
     """
 
     def __init__(self, graph, target, learning_rate=0.01, momentum=0.9):
