@@ -43,8 +43,11 @@ class RingAllReduceServer(object):
 
 class RingAllReduceService(arrpc.RingAllReduceServiceServicer):
     def __init__(self, vars_init_fn, scatter_fn, gather_fn):
+        # 参数初始化回调函数，由外部trainer传入
         self.vars_init_fn = vars_init_fn
+        # scatter回调函数，由外部的trainer传入
         self.scatter_fn = scatter_fn
+        # gather回调函数，由外部的trainer传入
         self.gather_fn = gather_fn
 
     def VariableWeightsInit(self, varibale_weights_req, context):
@@ -60,7 +63,7 @@ class RingAllReduceService(arrpc.RingAllReduceServiceServicer):
         stage = send_req.stage
         node_gradients_dict = DistCommon._deserialize_proto_node_gradients(
             send_req.node_gradients)
-
+        # 接收到左邻居的请求，根据当前阶段的不同，执行不同的回调函数
         if stage == arpb.RingAllReduceReq.SCATTER:
             acc_no = send_req.node_gradients.acc_no
             self.scatter_fn(node_gradients_dict, acc_no)

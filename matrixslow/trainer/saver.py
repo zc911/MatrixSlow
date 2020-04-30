@@ -32,7 +32,7 @@ class Saver(object):
     def __init__(self, root_dir=''):
         self.root_dir = root_dir
         if not os.path.exists(self.root_dir):
-            os.mkdir(self.root_dir)
+            os.makedirs(self.root_dir)
 
     def save(self, graph=None, meta=None, service_signature=None,
              model_file_name='model.json',

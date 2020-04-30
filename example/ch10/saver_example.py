@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-22 14:38:01
+@LastEditTime: 2020-04-30 09:25:28
 @LastEditors: chenzhen
 @Description:
 '''
@@ -72,7 +72,7 @@ accuracy = ms.ops.metrics.Accuracy(output, one_hot)
 
 
 trainer = SimpleTrainer(
-    [x], one_hot, output, loss, optimizer, epoches=10, batch_size=32,
+    [x], one_hot, loss, optimizer, epoches=10, batch_size=32,
     eval_on_train=True, metrics_ops=[accuracy])
 
 trainer.train_and_eval({x.name: X}, one_hot_label, {x.name: X}, one_hot_label)

@@ -18,16 +18,14 @@ class Trainer(object):
     训练器
     '''
 
-    def __init__(self, inputs, input_y, logits,
+    def __init__(self, input_x, input_y,
                  loss_op, optimizer,
                  epoches, batch_size=8,
                  eval_on_train=False, metrics_ops=None, *args, **kargs):
         # 计算图的输入节点，或者叫feature节点，输入节点可以有多个，因此类型是list
-        self.inputs = inputs
+        self.inputs = input_x
         # 计算图的label节点
         self.input_y = input_y
-        # 计算图的输出节点
-        self.logits = logits
         # 损失函数
         self.loss_op = loss_op
         # 优化器

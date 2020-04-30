@@ -1,21 +1,25 @@
 syntax = "proto3";
 
+// 计算图节点
 message Node {
     string name = 1;
     string node_type = 2;
 }
 
+// 矩阵
 message Matrix {
     repeated float value = 1;
     repeated int32 dim = 2;
 }
 
+// 利用两个数组存储节点和节点对应的梯度值
 message NodeGradients {
     repeated Node nodes = 1;
     repeated Matrix gradients = 2;
     int32 acc_no = 3;
 }
 
+// 变量节点和对应的参数权重
 message VariableWeightsReqResp {
     repeated Node variables = 1;
     repeated Matrix weights = 2;
