@@ -31,7 +31,7 @@ class Metrics(Node):
         pass
 
     @staticmethod
-    def prob_to_label(prob, thresholds=0.0):
+    def prob_to_label(prob, thresholds=0.5):
         if prob.shape[0] > 1:
             # 如果是多分类，预测值为概率最大的标签
             labels = np.zeros((prob.shape[0], 1))
@@ -153,17 +153,21 @@ class ROC(Metrics):
         self.fpr = np.array([0] * self.count)
 
     def compute(self):
-        logits = self.parents[0].value
+
+        prob = self.parents[0].value
         gt = self.parents[1].value
         self.gt_pos_num += np.sum(gt == 1)
         self.gt_neg_num += np.sum(gt == -1)
-        # 最小值-5，最大值5，步长0.1，生成100个阈值
-        thresholds = list(np.arange(-5, 5, 0.1))
-        # 分别使用100个阈值，把阈值映射为1或者-1
+
+        # 最小值0.01，最大值0.99，步长0.01，生成99个阈值
+        thresholds = list(np.arange(0.01, 1.00, 0.01))
+
+        # 分别使用多个阈值产生类别预测，与标签比较
         for index in range(0, len(thresholds)):
-            pred = Metrics.prob_to_label(logits, thresholds[index])
+            pred = Metrics.prob_to_label(prob, thresholds[index])
             self.true_pos_num[index] += np.sum(pred == gt and pred == 1)
             self.false_pos_num[index] += np.sum(pred != gt and pred == 1)
+
         # 分别计算TPR和FPR
         if self.gt_pos_num != 0 and self.gt_neg_num != 0:
             self.tpr = self.true_pos_num / self.gt_pos_num
@@ -193,8 +197,10 @@ class ROC_AUC(Metrics):
         self.gt_neg_preds = []
 
     def compute(self):
+
         logits = self.parents[0].value
         gt = self.parents[1].value
+
         # 简单起见，假设只有一个元素
         if gt[0, 0] == 1:
             self.gt_pos_preds.append(logits)
@@ -205,11 +211,13 @@ class ROC_AUC(Metrics):
 
     def value_str(self):
         count = 0
-        # 遍历M*N个样本对，计算正样本概率大于负样本概率的数量
+
+        # 遍历M*N个样本对，计算正类概率大于负类概率的数量
         for gt_pos_pred in self.gt_pos_preds:
             for gt_neg_pred in self.gt_neg_preds:
                 if gt_pos_pred > gt_neg_pred:
                     count += 1
+
         # 使用这个数量，除以M*N
         self.value = float(count) / self.total
         return "{}: {:.4f} ".format(self.__class__.__name__, self.value)
