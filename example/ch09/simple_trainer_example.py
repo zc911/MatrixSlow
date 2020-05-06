@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-20 17:17:08
+@LastEditTime: 2020-04-30 09:23:38
 @LastEditors: chenzhen
 @Description:
 '''
@@ -72,6 +72,6 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 batch_size = 32
 
 trainer = SimpleTrainer(
-    [x], one_hot, output, loss, optimizer, epoches=10, batch_size=batch_size)
+    [x], one_hot, loss, optimizer, epoches=10, batch_size=batch_size)
 
 trainer.train({x.name: X}, one_hot_label)

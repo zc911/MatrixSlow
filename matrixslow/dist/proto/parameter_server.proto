@@ -4,23 +4,27 @@ syntax = "proto3";
 import "common.proto";
 
 service ParameterService {
+    // 变量节点初始化接口
     rpc VariableWeightsInit(VariableWeightsReqResp) returns (VariableWeightsReqResp) {}
+    // Push接口,各节点上传梯度
     rpc Push(ParameterPushReq) returns (ParameterPushResp) {}
+    // Pull接口，各节点下拉梯度
     rpc Pull(ParameterPullReq) returns (ParameterPullResp) {}
 }
 
-
+// Push请求，上传节点-梯度集合
 message ParameterPushReq {
     NodeGradients node_gradients = 1;
 }
-
+// Push返回，暂不需要返回任何数据
 message ParameterPushResp {
 }
 
+// Pull请求，携带需要下拉梯度的节点
 message ParameterPullReq {
     repeated Node nodes = 1;
 }
-
+// Pull返回，返回节点梯度
 message ParameterPullResp {
     NodeGradients node_gradients = 1;
 }

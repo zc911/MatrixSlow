@@ -1,16 +1,21 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""
-Created on Thu Mar  5 16:58:19 2020
+'''
+@Author: chenzhen
+@Date: 2020-04-12 23:49:04
+@LastEditTime: 2020-04-30 09:24:48
+@LastEditors: chenzhen
+@Description:
+'''
 
-@author: chaos
-"""
 import sys
 sys.path.append('../../')
-from matrixslow.trainer import SimpleTrainer
-import matrixslow as ms
-from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-import pandas as pd
+
 import numpy as np
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import matrixslow as ms
+from matrixslow.trainer import SimpleTrainer
 
 
 
@@ -127,7 +132,7 @@ roc = ms.ops.metrics.ROC(output, label)
 auc = ms.ops.metrics.ROC_AUC(output, label)
 
 trainer = SimpleTrainer([x, x_Pclass, x_Sex, x_Embarked], label,
-                        output, loss, optimizer, epoches=20, batch=16, eval_on_train=True, metrics_ops=[auc])
+                        loss, optimizer, epoches=20, batch=16, eval_on_train=True, metrics_ops=[auc])
 
 train_inputs = {
     x.name: features,

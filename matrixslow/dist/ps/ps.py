@@ -30,7 +30,9 @@ class ParameterService(psrpc.ParameterServiceServicer):
     '''
 
     def __init__(self, worker_num, sync=True):
+        # 节点梯度缓存
         self.node_gradients_cache = dict()
+        # 变量参数权重缓存，用于初始化
         self.variable_weights_cache = dict()
         # PS运行同步还是异步模式
         self.sync = sync
@@ -45,60 +47,32 @@ class ParameterService(psrpc.ParameterServiceServicer):
 
         self.acc_no = 0
 
-    def _deserialize_push_req(self, push_req):
+    def Push(self, push_req, context):
         '''
-        反序列化push request
+        Push梯度到Parameter server并更新
         '''
-        acc_no = push_req.node_gradients.acc_no
-        node_with_gradients = DistCommon._deserialize_proto_node_gradients(
-            push_req.node_gradients)
+        # 从请求中解析出各节点的梯度值和产生这些梯度的样本数量
+        node_with_gradients, acc_no = self._deserialize_push_req(push_req)
+        # 存储到本地缓存中
+        if self.sync:
+            self._push_sync(node_with_gradients, acc_no)
+        else:
+            self._push_async(node_with_gradients, acc_no)
 
-        return node_with_gradients, acc_no
-
-    def _serialize_pull_resp(self):
-        '''
-        序列化pull response
-        '''
-        proto_node_gradients = DistCommon._serialize_proto_node_gradients(
-            self.node_gradients_cache)
-        resp = pspb.ParameterPullResp(node_gradients=proto_node_gradients)
-        return resp
-
-    def _update_gradients_cache(self, node_with_gradients):
-        '''
-        按照变量名/节点名，更新缓存的梯度值
-        '''
-        for node_name, gradient in node_with_gradients.items():
-            if node_name in self.node_gradients_cache:
-                exists_gradient = self.node_gradients_cache[node_name]
-                assert exists_gradient.shape == gradient.shape
-                self.node_gradients_cache[node_name] = exists_gradient + gradient
-            else:
-                self.node_gradients_cache[node_name] = gradient
-
-    def _gradients_cache_mean(self):
-        '''
-        对缓存的梯度值进行平均操作
-        '''
-        if self.acc_no != 0:
-            for name, gradient in self.node_gradients_cache.items():
-                self.node_gradients_cache[name] = self.node_gradients_cache[name] / self.acc_no
-            self.acc_no = 0
-
-    def _reset_gradients_cache(self):
-        self.node_gradients_cache.clear()
+        return pspb.ParameterPushResp()
 
     def _push_sync(self, node_with_gradients, acc_no):
         '''
         同步模式的push操作
         '''
+        # 加锁
         if self.cond.acquire():
-
+            # 等待上一轮所有worker都pull完成
             while self.cur_pull_num != self.worker_num:
                 self.cond.wait()
-
+            # 记录push次数
             self.cur_push_num += 1
-
+            # 把梯度更新到缓存
             self._update_gradients_cache(node_with_gradients)
             # 累计梯度数量
             self.acc_no += acc_no
@@ -106,7 +80,6 @@ class ParameterService(psrpc.ParameterServiceServicer):
             if self.cur_push_num >= self.worker_num:
                 self.cur_pull_num = 0
                 self.cond.notify_all()
-
             self.cond.release()
         else:
             self.cond.wait()
@@ -121,27 +94,28 @@ class ParameterService(psrpc.ParameterServiceServicer):
         self.acc_no += acc_no
         self.push_lock.release()
 
-    def Push(self, push_req, context):
+    def Pull(self, pull_req, context):
         '''
-        Push梯度到Parameter server并更新
+        从PS中pull梯度
         '''
-        node_with_gradients, acc_no = self._deserialize_push_req(push_req)
         if self.sync:
-            self._push_sync(node_with_gradients, acc_no)
+            resp = self._pull_sync()
         else:
-            self._push_async(node_with_gradients, acc_no)
-
-        return pspb.ParameterPushResp()
+            resp = self._pull_async()
+        return resp
 
     def _pull_sync(self):
         '''
         同步模式的pull操作
         '''
+        # 加锁
         if self.cond.acquire():
+            # 等待上一轮所有worker都push完成
             while self.cur_push_num != self.worker_num:
                 self.cond.wait()
-
+            # 记录pull次数
             self.cur_pull_num += 1
+            # 计算梯度均值
             self._gradients_cache_mean()
             resp = self._serialize_pull_resp()
             # 如果所有worker都已完成pull，通知worker开始push梯度
@@ -167,15 +141,49 @@ class ParameterService(psrpc.ParameterServiceServicer):
 
         return resp
 
-    def Pull(self, pull_req, context):
+    def _update_gradients_cache(self, node_with_gradients):
         '''
-        从PS中pull梯度
+        按照变量名/节点名，更新缓存的梯度值
         '''
-        if self.sync:
-            resp = self._pull_sync()
-        else:
-            resp = self._pull_async()
+        for node_name, gradient in node_with_gradients.items():
+            if node_name in self.node_gradients_cache:
+                exists_gradient = self.node_gradients_cache[node_name]
+                assert exists_gradient.shape == gradient.shape
+                self.node_gradients_cache[node_name] = exists_gradient + gradient
+            else:
+                self.node_gradients_cache[node_name] = gradient
+
+    def _gradients_cache_mean(self):
+        '''
+        对缓存的梯度值进行平均操作
+        '''
+        if self.acc_no != 0:
+            for name, gradient in self.node_gradients_cache.items():
+                self.node_gradients_cache[name] = self.node_gradients_cache[name] / self.acc_no
+            self.acc_no = 0
+
+    def _deserialize_push_req(self, push_req):
+        '''
+        反序列化push request
+        '''
+        acc_no = push_req.node_gradients.acc_no
+        node_with_gradients = DistCommon._deserialize_proto_node_gradients(
+            push_req.node_gradients)
+
+        return node_with_gradients, acc_no
+
+    def _serialize_pull_resp(self):
+        '''
+        序列化pull response
+        '''
+        proto_node_gradients = DistCommon._serialize_proto_node_gradients(
+            self.node_gradients_cache)
+        resp = pspb.ParameterPullResp(node_gradients=proto_node_gradients)
         return resp
+
+    def _reset_gradients_cache(self):
+        self.node_gradients_cache.clear()
+
 
     def VariableWeightsInit(self, varibale_weights_req, context):
         '''
@@ -236,9 +244,6 @@ class ParameterServiceClient(object):
         '''
         # 构造并发送pull请求，默认情况下，pull所有变量的梯度
         pull_req = pspb.ParameterPullReq()
-        # for node_name in nodes_name:
-        #     proto_node = pull_req.nodes.add()
-        #     proto_node.name = node_name
 
         pull_resp = self.stub.Pull(pull_req)
         # 把返回protobuf对象结果反序列化
