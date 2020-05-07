@@ -33,16 +33,18 @@ class Metrics(Node):
     @staticmethod
     def prob_to_label(prob, thresholds=0.5):
         if prob.shape[0] > 1:
-            # 如果是多分类，预测值为概率最大的标签
+            # 如果是多分类，预测类别为概率最大的类别
             labels = np.zeros((prob.shape[0], 1))
             labels[np.argmax(prob, axis=0)] = 1
         else:
-            # 否则以0.5作为thresholds
+            # 否则以thresholds为概率阈值判断类别
             labels = np.where(prob < thresholds, -1, 1)
+
         return labels
 
     def get_jacobi(self):
-        # 对于评估指标算子，计算雅各比无意义
+
+        # 对于评估指标节点，计算雅可比无意义
         raise NotImplementedError()
 
     def value_str(self):
@@ -51,7 +53,7 @@ class Metrics(Node):
 
 class Accuracy(Metrics):
     '''
-    Accuracy算子
+    正确率节点
     '''
 
     def __init__(self, *parents, **kargs):
@@ -83,7 +85,7 @@ class Accuracy(Metrics):
 
 class Precision(Metrics):
     '''
-    Precision算子
+    查准率节点
     '''
 
     def __init__(self, *parents, **kargs):
@@ -110,7 +112,7 @@ class Precision(Metrics):
 
 class Recall(Metrics):
     '''
-    Recall算法
+    查全率节点
     '''
 
     def __init__(self, *parents, **kargs):
@@ -128,8 +130,10 @@ class Recall(Metrics):
 
         pred = Metrics.prob_to_label(self.parents[0].value)
         gt = self.parents[1].value
+
         self.gt_pos_num += np.sum(gt == 1)
         self.true_pos_num += np.sum(pred == gt and pred == 1)
+
         self.value = 0
         if self.gt_pos_num != 0:
             self.value = float(self.true_pos_num) / self.gt_pos_num
@@ -198,27 +202,27 @@ class ROC_AUC(Metrics):
 
     def compute(self):
 
-        logits = self.parents[0].value
+        prob = self.parents[0].value
         gt = self.parents[1].value
 
         # 简单起见，假设只有一个元素
         if gt[0, 0] == 1:
-            self.gt_pos_preds.append(logits)
+            self.gt_pos_preds.append(prob)
         else:
-            self.gt_neg_preds.append(logits)
+            self.gt_neg_preds.append(prob)
 
         self.total = len(self.gt_pos_preds) * len(self.gt_neg_preds)
 
     def value_str(self):
         count = 0
 
-        # 遍历M*N个样本对，计算正类概率大于负类概率的数量
+        # 遍历m x n个样本对，计算正类概率大于负类概率的数量
         for gt_pos_pred in self.gt_pos_preds:
             for gt_neg_pred in self.gt_neg_preds:
                 if gt_pos_pred > gt_neg_pred:
                     count += 1
 
-        # 使用这个数量，除以M*N
+        # 使用这个数量，除以m x n
         self.value = float(count) / self.total
         return "{}: {:.4f} ".format(self.__class__.__name__, self.value)
 

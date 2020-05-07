@@ -9,6 +9,7 @@ from .trainer import Trainer
 
 
 class SimpleTrainer(Trainer):
+
     def __init__(self, *args, **kargs):
         Trainer.__init__(self, *args, **kargs)
 
