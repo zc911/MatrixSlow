@@ -26,6 +26,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
     '''
 
     def __init__(self, root_dir, model_file_name, weights_file_name):
+
         self.root_dir = root_dir
         self.model_file_name = model_file_name
         self.weights_file_name = weights_file_name
@@ -53,6 +54,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
         self.output_node = ms.get_node_from_graph(outputs['name'])
         assert self.output_node is not None
 
+
     def Predict(self, predict_req, context):
 
         # 从protobuf数据反序列化成Numpy Matrix
@@ -61,7 +63,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
         # 调用计算图，前向传播计算模型预测结果
         inference_resp = self._inference(inference_req)
 
-        # 预测结果序列化成protobuf格式，通过网络返回
+        # 将预测结果序列化成protobuf格式，通过网络返回
         predict_resp = MatrixSlowServingService.serialize(inference_resp)
 
         return predict_resp
@@ -75,6 +77,7 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
             mat = np.mat(proto_mat.value, dtype=np.float32)
             mat = np.reshape(mat, dim)
             infer_req_mat_list.append(mat)
+
         return infer_req_mat_list
 
     @staticmethod
@@ -85,16 +88,19 @@ class MatrixSlowServingService(serving_pb2_grpc.MatrixSlowServingServicer):
             proto_mat = resp.data.add()
             proto_mat.value.extend(np.array(mat).flatten())
             proto_mat.dim.extend(list(mat.shape))
+
         return resp
+
 
     def _inference(self, inference_req):
 
         inference_resp_mat_list = []
 
         for mat in inference_req:
-            # 数据输入模型并执行forward前向传播计算
+            # 将数据输入模型并执行前向传播
             self.input_node.set_value(mat.T)
             self.output_node.forward()
+
             # 把输出节点的值作为结果返回
             inference_resp_mat_list.append(self.output_node.value)
 
@@ -115,6 +121,7 @@ class MatrixSlowServer(object):
             MatrixSlowServingService(root_dir, model_file_name, weights_file_name), self.server)
 
         self.server.add_insecure_port(self.host)
+
 
     def serve(self):
 
