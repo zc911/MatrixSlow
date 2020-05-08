@@ -34,24 +34,29 @@ class Saver(object):
         if not os.path.exists(self.root_dir):
             os.makedirs(self.root_dir)
 
+
     def save(self, graph=None, meta=None, service_signature=None,
              model_file_name='model.json',
              weights_file_name='weights.npz'):
         '''
         把计算图保存到文件中
         '''
+
         if graph is None:
             graph = default_graph
 
-        # 元信息，主要记录模型的保存时间和权重文件名
+        # 元信息，主要记录模型的保存时间和节点值文件名
         meta = {} if meta is None else meta
         meta['save_time'] = str(datetime.datetime.now())
         meta['weights_file_name'] = weights_file_name
+
         # 服务接口描述
         service = {} if service_signature is None else service_signature
+
         # 开始保存操作
         self._save_model_and_weights(
             graph, meta, service, model_file_name, weights_file_name)
+
 
     def _save_model_and_weights(self, graph, meta, service, model_file_name, weights_file_name):
         model_json = {
@@ -60,6 +65,7 @@ class Saver(object):
         }
         graph_json = []
         weights_dict = dict()
+
         # 把节点元信息保存为dict/json格式
         for node in graph.nodes:
             if not node.need_save:
@@ -72,10 +78,12 @@ class Saver(object):
                 'children': [child.name for child in node.children],
                 'kargs': node.kargs
             }
+
             # 保存节点的dim信息
             if node.value is not None:
                 if isinstance(node.value, np.matrix):
                     node_json['dim'] = node.value.shape
+
             graph_json.append(node_json)
 
             # 如果节点是Variable类型，保存其值
@@ -84,6 +92,7 @@ class Saver(object):
                 weights_dict[node.name] = node.value
 
         model_json['graph'] = graph_json
+
         # json格式保存计算图元信息
         model_file_path = os.path.join(self.root_dir, model_file_name)
         with open(model_file_path, 'w') as model_file:
@@ -96,6 +105,7 @@ class Saver(object):
             np.savez(weights_file, **weights_dict)
             print('Save weights to file: {}'.format(weights_file.name))
 
+
     @staticmethod
     def create_node(graph, from_model_json, node_json):
         '''
@@ -106,6 +116,7 @@ class Saver(object):
         parents_name = node_json['parents']
         dim = node_json.get('dim', None)
         kargs = node_json.get('kargs', None)
+
         parents = []
         for parent_name in parents_name:
             parent_node = get_node_from_graph(parent_name, graph=graph)
@@ -121,8 +132,8 @@ class Saver(object):
                     graph, from_model_json, parent_node_json)
 
             parents.append(parent_node)
-        # 反射创建节点实例
 
+        # 反射创建节点实例
         if node_type == 'Variable':
             assert dim is not None
 
@@ -131,7 +142,9 @@ class Saver(object):
         else:
             return ClassMining.get_instance_by_subclass_name(Node, node_type)(*parents, name=node_name, **kargs)
 
+
     def _restore_nodes(self, graph, from_model_json, from_weights_dict):
+
         for index in range(len(from_model_json)):
             node_json = from_model_json[index]
             node_name = node_json['name']
@@ -148,7 +161,9 @@ class Saver(object):
                     node_json['name'], node_json['node_type']))
                 target_node = Saver.create_node(
                     graph, from_model_json, node_json)
+
             target_node.value = weights
+
 
     def load(self, to_graph=None,
              model_file_name='model.json',
@@ -175,10 +190,12 @@ class Saver(object):
             for file_name in weights_npz_files.files:
                 weights_dict[file_name] = weights_npz_files[file_name]
             weights_npz_files.close()
+
         graph_json = model_json['graph']
         self._restore_nodes(to_graph, graph_json, weights_dict)
         print('Load and restore model from {} and {}'.format(
             model_file_path, weights_file_path))
+
         self.meta = model_json.get('meta', None)
         self.service = model_json.get('service', None)
         return self.meta, self.service
