@@ -19,7 +19,7 @@ message NodeGradients {
     int32 acc_no = 3;
 }
 
-// 变量节点和对应的参数权重
+// 变量节点和对应的参数
 message VariableWeightsReqResp {
     repeated Node variables = 1;
     repeated Matrix weights = 2;
