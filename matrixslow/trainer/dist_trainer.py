@@ -64,6 +64,8 @@ class DistTrainerRingAllReduce(Trainer):
 
     def __init__(self, *args, **kargs):
         Trainer.__init__(self, *args, **kargs)
+
+        # 读取集群配置信息和自身信息
         self.cluster_conf = kargs['cluster_conf']
         self.worker_index = kargs['worker_index']
 
@@ -72,7 +74,8 @@ class DistTrainerRingAllReduce(Trainer):
         self.host = self.workers[self.worker_index]
 
         self.step = self.worker_num - 1
-        # 从集群的环状拓扑结构中，确定右邻居
+
+        # 根据集群的环状拓扑结构确定右邻居
         self.target_host = self.workers[(
             self.worker_index + 1) % self.worker_num]
 
@@ -82,9 +85,11 @@ class DistTrainerRingAllReduce(Trainer):
 
         self.cur_partion_index = self.worker_index
         self.partition = []
-        # 获取所有可训练节点，即所有需要更新的权值变量
+
+        # 获取所有可训练节点
         self.variables = get_trainable_variables_from_graph()
-        # 根据worker的总数量，对即将更新的权值变量列表进行等长切分
+
+        # 根据worker的总数量，对即将更新的变量节点列表进行等长切分
         self._partition_variables()
 
         # 用于控制梯度的发送和接收
@@ -99,8 +104,10 @@ class DistTrainerRingAllReduce(Trainer):
             self._variable_weights_init_callback,
             self._scatter_callback,
             self._gather_callback).serve()
+
         # 创建连接目标节点的梯度发送client
         self.client = allreduce.RingAllReduceClient(self.target_host)
+
 
     def _variable_weights_init(self):
         var_weights_dict = dict()
