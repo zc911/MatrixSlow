@@ -116,11 +116,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     role = args.role
-    # 如果是PS的角色，启动PS服务器，等待Worker连入
+    # 如果是PS角色，启动PS服务器，等待Worker连入
     if role == 'ps':
         server = ps.ParameterServiceServer(cluster_conf, sync=True)
         server.serve()
     else:
-        # 如果是Worker角色，则需要指定自己的index
+        # 如果是worker角色，则需要指定自己的index
         worker_index = args.worker_index
         train(worker_index)
