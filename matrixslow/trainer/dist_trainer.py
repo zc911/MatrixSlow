@@ -110,11 +110,13 @@ class DistTrainerRingAllReduce(Trainer):
 
 
     def _variable_weights_init(self):
+
         var_weights_dict = dict()
         for node in default_graph.nodes:
             if isinstance(node, Variable) and node.trainable:
                 var_weights_dict[node.name] = node.value
         print('[INIT] Send variable init weights to worker ', self.target_host)
+
         # 第一个节点不需要等待，使用默认值更新给下一个节点
         if self.worker_index == 0:
             self.client.variable_weights_init(var_weights_dict)
@@ -125,34 +127,45 @@ class DistTrainerRingAllReduce(Trainer):
             self.init_cond.release()
             self.client.variable_weights_init(var_weights_dict)
 
+
     def _variable_weights_init_callback(self, var_weights_dict):
-            # 第一个节点不需要接收上一个节点的初始值
+
+        # 第一个节点不需要接收上一个节点的初始值
         if self.worker_index != 0:
             print('[INIT] Variables initializing weights from last worker node...')
             for var_name, weights in var_weights_dict.items():
                 update_node_value_in_graph(var_name, weights)
+
         # 已初始化完成，通知发送流程
         self.init_cond.acquire()
         self.is_init = True
         self.init_cond.notify_all()
         self.init_cond.release()
 
+
     def _optimizer_update(self):
-        # 共执行 N-1 次的scatter操作，把本节点的梯度切片发送给下一个节点
-        # 同时接收上一个节点发送过来的梯度并累加更新到当前节点的对应切片
+
+        # 共执行 N-1 次scatter操作，把本worker的梯度切片发送给下一个worker
+        # 同时接收左邻居发送过来的梯度，累加到自己的对应切片上
         for scatter_index in range(self.step):
             gradients_part = self._get_gradients_partition()
             cur_acc_no = self.optimizer.acc_no if scatter_index == 0 else self.recieved_acc_no
+
+            # 把自身的一个数据分块发送给右邻居
             self.client.send(gradients_part, cur_acc_no, 'scatter')
+
+            # 等待接收并处理完左邻居节点的数据
             self._wait_for_recieve('scatter')
-        # 然后执行 N-1 次的all-gather操作，把本节点的梯度切片发送给下一个节点
-        # 同时接收上一个节点发送过来的梯度并替换更新到当前节点的对应切片
+
+        # 然后执行 N-1 次all-gather操作，把本worker的梯度切片发送给下一个worker
+        # 同时接收上一个worker发送过来的梯度并替换自己的对应切片
         for gather_index in range(self.step):
             gradients_part = self._get_gradients_partition()
             self.client.send(gradients_part, 0, 'gather')
             self._wait_for_recieve('gather')
 
         self.optimizer.update()
+
 
     def _partition_variables(self):
         '''
@@ -161,13 +174,16 @@ class DistTrainerRingAllReduce(Trainer):
         var_num = len(self.variables)
         part_length = int(var_num / self.worker_num)
         assert part_length > 0
+
         start = 0
         end = start + part_length
         for i in range(self.worker_num - 1):
             self.partition.append((start, end))
             start = end
             end = start + part_length
+
         self.partition.append((start, var_num))
+
 
     def _get_gradients_partition(self):
         '''
@@ -183,27 +199,29 @@ class DistTrainerRingAllReduce(Trainer):
         return part_gradients
 
 
-
     def _scatter_callback(self, node_gradients_dict, acc_no):
         '''
-        Scatter 阶段的回调函数，接收上一个节点发送过来的梯度和样本数
+        Scatter 阶段的回调函数，接收上一个worker发送过来的梯度和样本数
         '''
         if self.cond.acquire():
             while self.is_recieved:
                 self.cond.wait()
 
+            # 把接收到的梯度缓存下来
             self.recieved_gradients = node_gradients_dict
             self.recieved_acc_no = acc_no
             self.is_recieved = True
+
             # 通知主流程，把接收到的梯度更新到优化器
             self.cond.notify_all()
             self.cond.release()
         else:
             self.cond.wait()
 
+
     def _gather_callback(self, node_gradients_dict):
         '''
-        All-gather 阶段的回调函数，接收上一个节点发送过来的梯度
+        All-gather 阶段的回调函数，接收上一个worker发送来的梯度
         '''
         if self.cond.acquire():
             while self.is_recieved:
@@ -211,29 +229,35 @@ class DistTrainerRingAllReduce(Trainer):
 
             self.recieved_gradients = node_gradients_dict
             self.is_recieved = True
+
             # 通知主流程，把接收到的梯度更新到优化器
             self.cond.notify_all()
             self.cond.release()
         else:
             self.cond.wait()
 
+
     def _wait_for_recieve(self, stage):
         '''
-        等待梯度接收并使用接收到的梯度，更新到优化器中
+        等待梯度，并把接收到的梯度更新到优化器中
         '''
         if self.cond.acquire():
             while not self.is_recieved:
                 self.cond.wait()
-            # 如果是scatter阶段，梯度累加更新，同时累加样本数
+
+            # 如果是scatter阶段则累加梯度，同时累加样本数
             if stage == 'scatter':
                 self.optimizer.apply_gradients(
                     self.recieved_gradients,  summarize=True, acc_no=self.recieved_acc_no)
-            # 如果是all-gather节点，梯度覆盖更新，样本数保持不变
+
+            # 如果是all-gather阶段则覆盖梯度，样本数保持不变
             else:
                 self.optimizer.apply_gradients(
                     self.recieved_gradients, summarize=False, acc_no=self.optimizer.acc_no)
+
             self.is_recieved = False
-            # 梯度已被更新，通知接收流程可以继续接收新的梯度
+
+            # 梯度已被更新，通知接收流程继续接收新的梯度
             self.cond.notify_all()
             self.cond.release()
         else:
