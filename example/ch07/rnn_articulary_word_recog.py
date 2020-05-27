@@ -5,6 +5,9 @@ Created on Wed Mar 11 16:14:29 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import pandas as pd
 import numpy as np
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
@@ -12,8 +15,8 @@ from scipy.io import arff
 
 import matrixslow as ms
 
-path_train = "data/ArticularyWordRecognition/ArticularyWordRecognition_TRAIN.arff"
-path_test = "data/ArticularyWordRecognition/ArticularyWordRecognition_TEST.arff"
+path_train = "../../data/ArticularyWordRecognition/ArticularyWordRecognition_TRAIN.arff"
+path_test = "../../data/ArticularyWordRecognition/ArticularyWordRecognition_TEST.arff"
 
 
 # 读取arff格式数据

@@ -5,6 +5,9 @@ Created on Fri Feb 21 15:27:01 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 from sklearn.datasets import fetch_openml
 from sklearn.preprocessing import OneHotEncoder

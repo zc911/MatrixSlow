@@ -5,6 +5,9 @@ Created on Fri Mar 13 12:37:21 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import matrixslow as ms
 from scipy import signal

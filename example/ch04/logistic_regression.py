@@ -4,6 +4,10 @@ Created on Tue Jan 21 16:28:12 2020
 
 @author: zhangjuefei
 """
+
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import matrixslow as ms
 

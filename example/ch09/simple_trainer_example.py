@@ -9,6 +9,7 @@
 '''
 import sys
 sys.path.append('../../')
+
 from matrixslow.trainer import SimpleTrainer
 import matrixslow as ms
 from sklearn.preprocessing import OneHotEncoder

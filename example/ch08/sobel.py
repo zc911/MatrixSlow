@@ -5,6 +5,9 @@ Created on Mon Mar 23 10:07:59 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import matrixslow as ms
 import numpy as np
 import matplotlib.pyplot as plt

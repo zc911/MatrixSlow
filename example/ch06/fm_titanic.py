@@ -5,13 +5,16 @@ Created on Wed Mar  4 20:38:10 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import matrixslow as ms
 
 # 读取数据，去掉无用列
-data = pd.read_csv("../MatrixSlow/data/titanic.csv").drop(["PassengerId", 
+data = pd.read_csv("../../data/titanic.csv").drop(["PassengerId", 
                   "Name", "Ticket", "Cabin"], axis=1)
 
 # 构造编码类

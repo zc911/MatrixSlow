@@ -11,7 +11,6 @@
 import sys
 sys.path.append('../../')
 
-
 import argparse
 from matrixslow.dist.ps import ps
 from matrixslow_serving.exporter import Exporter

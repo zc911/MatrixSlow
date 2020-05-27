@@ -5,13 +5,16 @@ Created on Wed Feb 19 17:24:13 2020
 @author: zhangjuefei
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import matrixslow as ms
 
 # 读取鸢尾花数据集，去掉第一列Id
-data = pd.read_csv("data/Iris.csv").drop("Id", axis=1)
+data = pd.read_csv("../../data/Iris.csv").drop("Id", axis=1)
 
 # 随机打乱样本顺序
 data = data.sample(len(data), replace=False)

@@ -5,6 +5,8 @@ Created on Wed Mar  4 14:16:50 2020
 @author: zhangjuefei
 """
 
+import sys
+sys.path.append('../..')
 
 import numpy as np
 from sklearn.datasets import make_classification

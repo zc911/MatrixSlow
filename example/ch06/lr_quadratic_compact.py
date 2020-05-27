@@ -5,6 +5,9 @@ Created on Fri Feb 28 17:28:28 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import matrixslow as ms
 from sklearn.datasets import make_circles

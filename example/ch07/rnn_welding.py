@@ -5,6 +5,9 @@ Created on Sat Mar 14 11:02:28 2020
 @author: chaos
 """
 
+import sys
+sys.path.append('../..')
+
 import numpy as np
 import matrixslow as ms
 from scipy import signal
@@ -109,7 +112,7 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 
 batch_size = 16
 
-for epoch in range(10):
+for epoch in range(30):
     
     batch_count = 0   
     for i, s in enumerate(signal_train):
