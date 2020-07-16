@@ -65,7 +65,7 @@ optimizer = ms.optimizer.Adam(ms.default_graph, loss, learning_rate)
 batch_size = 16
 
 # 训练执行200个epoch
-for epoch in range(200):
+for epoch in range(2):
     
     # 批计数器清零
     batch_count = 0
