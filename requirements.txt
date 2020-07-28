@@ -7,7 +7,7 @@ astroid==2.3.2
 attrs==19.3.0
 Babel==2.7.0
 backcall==0.1.0
-bleach==3.1.0
+bleach==3.1.4
 Bottleneck==1.2.1
 CacheControl==0.12.5
 cachetools==3.1.1
