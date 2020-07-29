@@ -280,18 +280,12 @@ cluster_conf = {
     #     "localhost:6004"
     # ]
     "ps": [
-        # "k0625v.add.lycc.qihoo.net:5000"
         "localhost:5000"
     ],
     "workers": [
         "localhost:6000",
         "localhost:6002",
         "localhost:6004"
-        # "k0110v.add.lycc.qihoo.net:5000",
-        # "k0629v.add.lycc.qihoo.net:5000"
-        # "p30217v.hulk.shbt.qihoo.net:5000",
-        # "k0631v.add.lycc.qihoo.net:5000",
-        # "k7791v.add.bjyt.qihoo.net:5000"
     ]
 }
 

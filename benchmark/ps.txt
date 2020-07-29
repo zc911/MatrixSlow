@@ -1,9 +1,9 @@
     "ps": [
-        "k0625v.add.lycc.qihoo.net:5000"
+        "k0625v:5000"
     ],
     "workers": [
-        "k0110v.add.lycc.qihoo.net:5000",
-        "k0631v.add.lycc.qihoo.net:5000"
+        "k0110v:5000",
+        "k0631v:5000"
     ]
 
 
@@ -29,7 +29,7 @@
 ------------
 
 
-[GRPC] Connected to parameter service: k0625v.add.lycc.qihoo.net:5000
+[GRPC] Connected to parameter service: k0625v:5000
 [INIT] Worker variable weights initialized
 [INIT] Variable weights init finished
 - Epoch [1] train start, batch size: 8, train data size: 15000

@@ -3,7 +3,7 @@
 '''
 @Author: chenzhen
 @Date: 2020-04-10 17:04:46
-@LastEditTime: 2020-04-30 16:51:22
+@LastEditTime: 2020-07-29 09:55:25
 @LastEditors: chenzhen
 @Description:
 '''
@@ -24,9 +24,9 @@ import numpy as np
 
 cluster_conf = {
     "workers": [
-        "app07.add.shyc2.qihoo.net:6000",
-        "app08.add.shyc2.qihoo.net:6002",
-        "app09.add.shyc2.qihoo.net:6004"
+        "app07:6000",
+        "app08:6002",
+        "app09:6004"
     ]
 }
 
