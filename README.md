@@ -10,3 +10,6 @@ MatrixSlow is a simple Deep Learning Framework written in Python.
 - Distributed Trainning
 - Model saver and loader
 - Model serving
+
+#### Book
+《用Python实现深度学习框架》
