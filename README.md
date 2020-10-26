@@ -1,11 +1,13 @@
 <!--
  * @Author: chenzhen
  * @Date: 2019-07-09 11:36:06
- * @LastEditTime: 2020-10-26 15:47:04
+ * @LastEditTime: 2020-10-26 16:10:35
  * @LastEditors: chenzhen
  * @Description:
 -->
 # MatrixSlow - 用Python实现深度学习框架
+
+[English Version](README_EN.md)
 
 ![avatar](book.png)
 
