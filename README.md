@@ -26,13 +26,13 @@
 
 ### 特性
 
-- 基于计算图，可用于搭建大多数的机器学习模型
-- 支持自动微分求导
-- 支持随机梯度下降优化算法及其几个重要变种
-- 支持常见的模型评估算法
-- 支持模型保存和加载
-- 支持PS和Ring AllReduce分布式训练
-- 支持模型serving
+- 基于计算图，可用于搭建大多数的机器学习模型。
+- 支持自动求导。
+- 支持随机梯度下降优化算法及其几个重要变种（如RMSProp、ADAGrad、ADAM等）。
+- 支持常见的模型评估算法。
+- 支持模型保存和加载。
+- 支持PS和Ring AllReduce分布式训练。
+- 支持模型serving 。
 
 ### 依赖
 核心代码：
@@ -58,6 +58,6 @@
 ├── matrixslow
 └── matrixslow_serving
 ```
-- matrixslow: 核心代码部分，包括计算图、自动微分和优化、模型保存加载、分布式训练的实现
-- matrixslow_serving: 通用的模型推理服务，类似tensorflow serving
-- example: 按照书中章节分目录的示例，比如ch02介绍了如何用matrixslow实现一个简单的类LR模型,ch11则演示了如何进行分布式训练
+- matrixslow: 核心代码部分，包括计算图、自动求导和优化算法、模型保存加载、分布式训练。
+- matrixslow_serving: 通用的模型推理服务，类似tensorflow serving 。
+- example: 按照书中章节分目录的示例，比如ch05介绍了如何用matrixslow搭建和训练多层全连接神经网络，ch11演示了如何进行分布式训练。
