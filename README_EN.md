@@ -1,7 +1,7 @@
 <!--
  * @Author: chenzhen
  * @Date: 2019-07-09 11:36:06
- * @LastEditTime: 2020-10-26 19:32:12
+ * @LastEditTime: 2020-10-29 14:38:48
  * @LastEditors: chenzhen
  * @Description:
 -->
@@ -12,7 +12,7 @@
 ![avatar](book.png)
 
 ### Introduction
-In 1984, Professor Andrew S. Tanenbaum, author of Modern Operating Systems (commonly known as the Circus Book), developed a teaching operating system [Minix] (https://www.minix3.org). Inspired by it (how much is unknown), Linus Torvalds created the Linux system. Here we decided to follow the example of our predecessors and implement from scratch a computational graph-based machine learning/deep learning framework in Python, which we call MatrixSlow.
+In 1984, Professor Andrew S. Tanenbaum, author of Modern Operating Systems (commonly known as the Circus Book), developed a teaching operating system [Minix](https://www.minix3.org). Inspired by it (how much is unknown), Linus Torvalds created the Linux system. Here we decided to follow the example of our predecessors and implement from scratch a computational graph-based machine learning/deep learning framework in Python, which we call MatrixSlow.
 
 The original intent of implementing MatrixSlow was to share learning within our team. By combining machine learning theory, principles, and engineering practice, we can deepen our "understanding" of the theory through hands-on "building". The deep learning framework is a perfect example of this. However, the source code of modern deep learning frameworks such as TensorFlow is already too complex for learning, so we decided to implement a simple deep learning framework MatrixSlow in pure Python (about 2K lines of core code, depending only on Numpy). This framework is based on computational graph and supports automatic derivation and gradient descent optimization algorithms (and variants). (We have built a number of classical models using this framework, including LR, FM, DNN, CNN, RNN, W&D, DeepFM, etc.). The framework also includes a number of engineering solutions, including trainers, distributed training, model deployment, and services. The modest name MatrixSlow was taken to indicate that it is only a framework for teaching purposes, supports only second-order tensor (Matrix, but no loss in expressiveness, see Chapter 12, Section 1 of this book for details), does not take computational optimization into account, and therefore runs somewhat sloooowly.
 
