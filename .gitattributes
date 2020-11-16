@@ -1,1 +1,2 @@
-*.py linguist-language=python
+*.py linguist-language=Python
+*.pyc linguist-language=Python
