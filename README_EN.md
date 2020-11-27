@@ -19,7 +19,7 @@ The original intent of implementing MatrixSlow was to share learning within our 
 In addition to the open source code of MatrixSlow, we also put together some of the thoughts and implementation details when designing MatrixSlow into a book "Deep Learning Framework in Python", which was published by People's Daily Publishing House (Turing Original) and is available for purchase on all major e-commerce platforms.
 
 
-- [JD](https://item.jd.com/12994556.html)
+- [JD](https://item.jd.com/12994556.html?cu=true&utm_source=zhuanlan.zhihu.com&utm_medium=tuiguang&utm_campaign=t_1001542270_1002093764_0_1956949436&utm_term=71be62a1a29845aaa4ac74b359c06e49)
 - [Dangdang](http://product.dangdang.com/29139156.html)
 - [Taobao](https://detail.tmall.com/item.htm?spm=a230r.1.14.110.52abd576UEklUs&id=628890432853&ns=1&abbucket=2)
 
