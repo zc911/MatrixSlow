@@ -18,7 +18,7 @@
 
 除了把MatrixSlow的代码开源之外，我们还把设计MatrixSlow时的一些思考和实现细节汇集成书《用Python实现深度学习框架》，由人民邮电出版社（图灵原创）正式出版上架，各大电商平台已可以购买：
 
-- [京东](https://item.jd.com/12994556.html)
+- [京东](https://item.jd.com/12994556.html?cu=true&utm_source=zhuanlan.zhihu.com&utm_medium=tuiguang&utm_campaign=t_1001542270_1002093764_0_1956949436&utm_term=71be62a1a29845aaa4ac74b359c06e49)
 - [当当](http://product.dangdang.com/29139156.html)
 - [淘宝](https://detail.tmall.com/item.htm?spm=a230r.1.14.110.52abd576UEklUs&id=628890432853&ns=1&abbucket=2)
 
