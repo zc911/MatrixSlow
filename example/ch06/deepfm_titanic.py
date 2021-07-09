@@ -85,7 +85,7 @@ embedding = ms.ops.Concat(
 # FM部分
 fm = ms.ops.Add(ms.ops.MatMul(w, x),   # 一次部分                
                 # 二次部分
-                ms.ops.MatMul(ms.ops.Reshape(embedding, shape=(1, 3 * k)), embedding)
+                ms.ops.MatMul(ms.ops.Transpose(embedding), embedding)
                 )
 
 
