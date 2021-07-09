@@ -151,6 +151,29 @@ class Reshape(Operator):
         return np.mat(np.eye(self.dimension()))
 
 
+class Transpose(Operator):
+    """
+    转置父节点的值（矩阵）
+    """
+    def __init__(self, *parent, **kargs):
+        Operator.__init__(self, *parent, **kargs)
+        self.permutation = None
+    
+    def compute(self):
+        self.value = np.transpose(self.parents[0].value)
+
+    def get_jacobi(self, parent):
+        if self.permutation is None:
+            self.permutation = np.mat(np.zeros((parent.dimension(), parent.dimension())))
+            m, n = self.parents[0].value.shape
+            for i in range(0, m):
+                for j in range(0, n):
+                    self.permutation[j*m + i, i*n + j] = 1
+            # assert (np.linalg.inv(self.jacobi) == self.jacobi).all
+
+        return self.permutation
+
+
 class Multiply(Operator):
     """
     两个父节点的值是相同形状的矩阵，将它们对应位置的值相乘
