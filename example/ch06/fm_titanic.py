@@ -56,7 +56,7 @@ w = ms.core.Variable(dim=(1, dimension), init=True, trainable=True)
 
 # 隐藏向量矩阵
 H = ms.core.Variable(dim=(k, dimension), init=True, trainable=True)
-HTH = ms.ops.MatMul(ms.ops.Reshape(H, shape=(dimension, k)), H)
+HTH = ms.ops.MatMul(ms.ops.Transpose(H), H)
 
 # 偏置
 b = ms.core.Variable(dim=(1, 1), init=True, trainable=True)
@@ -66,7 +66,7 @@ output = ms.ops.Add(
         ms.ops.MatMul(w, x1),   # 一次部分
         
         # 二次部分
-        ms.ops.MatMul(ms.ops.Reshape(x1, shape=(1, dimension)),
+        ms.ops.MatMul(ms.ops.Transpose(x1),
                       ms.ops.MatMul(HTH, x1)),
         b)
 
