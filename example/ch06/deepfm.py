@@ -45,7 +45,7 @@ embedding = ms.ops.MatMul(E, x1)
 # FM部分
 fm = ms.ops.Add(ms.ops.MatMul(w, x1),   # 一次部分
                 # 二次部分
-                ms.ops.MatMul(ms.ops.Reshape(embedding, shape=(1, k)), embedding))
+                ms.ops.MatMul(ms.ops.Transpose(embedding), embedding))
 
 
 # Deep部分，第一隐藏层
