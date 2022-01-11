@@ -160,7 +160,7 @@ class Momentum(Optimizer):
                 gradient = self.get_gradient(node)
 
                 if node not in self.v:
-                    self.v[node] = gradient
+                    self.v[node] = - self.learning_rate * gradient
                 else:
                     # 滑动平均累积历史速度
                     self.v[node] = self.momentum * self.v[node] \
