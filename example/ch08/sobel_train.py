@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 # 读取图像，归一化
-pic = matplotlib.image.imread('data/lena.jpg') / 255
+pic = matplotlib.image.imread('../../data/lena.jpg') / 255
 
 # 图像尺寸
 w, h = pic.shape

@@ -67,7 +67,7 @@ fc1 = ms.layer.fc(h, status_dimension, 40, "ReLU")  # 第一全连接层
 output = ms.layer.fc(fc1, 40, 25, "None")  # 输出层
 
 # 概率
-predict = ms.ops.Logistic(output)
+predict = ms.ops.SoftMax(output)
 
 # 训练标签
 label = ms.core.Variable((25, 1), trainable=False)

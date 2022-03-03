@@ -61,4 +61,4 @@ if __name__ == '__main__':
         pred = np.argmax(resp_mat_list[0])
         gt = label
         print('model predict {} and ground truth: {}'.format(
-            np.argmax(pred.value), gt))
+            pred, gt))

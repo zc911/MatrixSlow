@@ -116,6 +116,7 @@ class Saver(object):
         parents_name = node_json['parents']
         dim = node_json.get('dim', None)
         kargs = node_json.get('kargs', None)
+        kargs['graph'] = graph
 
         parents = []
         for parent_name in parents_name:
@@ -128,7 +129,7 @@ class Saver(object):
 
                 assert parent_node_json is not None
                 # 如果父节点不存在，递归调用
-                parent_node = create_node(
+                parent_node = Saver.create_node(
                     graph, from_model_json, parent_node_json)
 
             parents.append(parent_node)

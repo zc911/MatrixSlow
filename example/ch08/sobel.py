@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 # 读取图像，归一化
-pic = matplotlib.image.imread('data/mondrian.jpg') / 255
+pic = matplotlib.image.imread('../../data/mondrian.jpg') / 255
 
 # 图像尺寸
 w, h = pic.shape
@@ -61,3 +61,5 @@ ax.imshow(sobel_v_output.value, cmap="gray")
 ax = fig.add_subplot(224)
 ax.axis("off")
 ax.imshow(sobel_h_output.value, cmap="gray")
+
+plt.show()
