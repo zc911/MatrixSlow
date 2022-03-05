@@ -24,9 +24,9 @@ import numpy as np
 
 cluster_conf = {
     "workers": [
-        "app07:6000",
-        "app08:6002",
-        "app09:6004"
+        "localhost:6000",
+        "localhost:6002",
+        "localhost:6004"
     ]
 }
 
