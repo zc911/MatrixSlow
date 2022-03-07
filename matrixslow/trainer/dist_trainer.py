@@ -4,6 +4,7 @@ Created on Thu Jul 18 20:48:16 CST 2019
 
 @author: chenzhen
 """
+import math
 import threading
 import time
 
@@ -172,7 +173,7 @@ class DistTrainerRingAllReduce(Trainer):
         根据worker的总数量，对即将更新的权值变量列表进行等长切分
         '''
         var_num = len(self.variables)
-        part_length = int(var_num / self.worker_num)
+        part_length = math.ceil(var_num / self.worker_num)
         assert part_length > 0
 
         start = 0
