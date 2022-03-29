@@ -23,7 +23,7 @@ def get_trainable_variables_from_graph(node_name=None, name_scope=None, graph=No
     if graph is None:
         graph = default_graph
     if node_name is None:
-        return [node for node in default_graph.nodes if isinstance(node, Variable) and node.trainable]
+        return [node for node in graph.nodes if isinstance(node, Variable) and node.trainable]
 
     if name_scope:
         node_name = name_scope + '/' + node_name
