@@ -349,8 +349,7 @@ class Step(Operator):
         self.value = np.mat(np.where(self.parents[0].value >= 0.0, 1.0, 0.0))
 
     def get_jacobi(self, parent):
-        np.mat(np.eye(self.dimension()))
-        return np.zeros(np.where(self.parents[0].value.A1 >= 0.0, 0.0, -1.0))
+        return np.mat(np.zeros(self.dimension()))
 
 
 class Welding(Operator):
