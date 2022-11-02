@@ -57,13 +57,13 @@ class Graph:
                 + ("\n[{:.3f}]".format(np.linalg.norm(node.jacobi))
                    if node.jacobi is not None else "")
             for c in node.get_children():
-                if {node, c} not in already:
+                if (node, c) not in already:
                     G.add_edge(node, c)
-                    already.append({node, c})
+                    already.append((node, c))
             for p in node.get_parents():
-                if {node, p} not in already:
-                    G.add_edge(node, p)
-                    already.append({node, c})
+                if (p, node) not in already:
+                    G.add_edge(p, node)
+                    already.append((p, node))   
 
         if ax is None:
             fig = plt.figure(figsize=(12, 12))
@@ -96,7 +96,7 @@ class Graph:
         nx.draw_networkx_nodes(G, pos, nodelist=nodelist, node_color=colorlist, cmap=cm, edgecolors="#666666",
                                node_size=2000, alpha=1.0, ax=ax)
 
-        # 无雅克比的中间
+        # 无雅克比的计算节点
         nodelist = [n for n in self.nodes if n.__class__.__name__ !=
                     "Variable" and n.jacobi is None]
         nx.draw_networkx_nodes(G, pos, nodelist=nodelist, node_color="#999999", cmap=cm, edgecolors="#666666",
