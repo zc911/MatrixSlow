@@ -229,7 +229,7 @@ class RMSProp(Optimizer):
 
                 # 滑动加权累积梯度各分量的平方和
                 if node not in self.s:
-                    self.s[node] = np.power(gradient, 2)
+                    self.s[node] = (1 - self.beta) * np.power(gradient, 2)
                 else:
                     self.s[node] = self.beta * self.s[node] + \
                         (1 - self.beta) * np.power(gradient, 2)
@@ -272,8 +272,8 @@ class Adam(Optimizer):
                 gradient = self.get_gradient(node)
 
                 if node not in self.s:
-                    self.v[node] = gradient
-                    self.s[node] = np.power(gradient, 2)
+                    self.v[node] = (1 - self.beta_1) * gradient
+                    self.s[node] = (1 - self.beta_2) * np.power(gradient, 2)
                 else:
                     # 梯度累积
                     self.v[node] = self.beta_1 * self.v[node] + \
